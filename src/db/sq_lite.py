@@ -17,8 +17,9 @@ class SqLite:
         df.to_sql(table_name, self.conn, if_exists=if_exists, index=False)
         self.conn.commit()
 
-    def query_data(self, query: str, params: list[str]) -> list:
-        self.cursor.execute(query, params)
+    def query_data(self, query: str, params: dict) -> list:
+        query = query.format(**(params  or {}))
+        self.cursor.execute(query)
         rows = self.cursor.fetchall()
 
         return rows

@@ -5,6 +5,8 @@ from ..db.graph_db import GraphDb
 from ..db.sq_lite import SqLite
 from ..sparql_queries import get_catalogs_metadata_nkod_remote
 from src.services.base_data_processor import BaseDataProcessor
+from ..sql_queries import get_keywords_czech_nkod, get_keywords_english_nkod, get_descriptions_czech_nkod, get_descriptions_english_nkod, get_titles_english_nkod, get_titles_czech_nkod
+from ..utils import split_keywords_sql_output, print_keywords_stats, split_descs_or_titles_sql_output, print_titles_stats, print_descs_stats
 
 
 class NkodDataProcessor(BaseDataProcessor):
@@ -39,18 +41,39 @@ class NkodDataProcessor(BaseDataProcessor):
         print(f"Metadata file downloaded as {self.metadata_path}")
 
     def _index_keywords(self, sq_lite: SqLite, language: str = "cs") -> None:
-        pass
+        if language == "cs":
+            result = sq_lite.query_data(get_keywords_czech_nkod, {"table_name": self.sql_table_name})
+        else: # language == "en"
+            result = sq_lite.query_data(get_keywords_english_nkod, {"table_name": self.sql_table_name})
+
+        split_sql = split_keywords_sql_output(result, f"keywords_{language}")
+        print_keywords_stats(split_sql, f"keywords_{language}", language)
 
     def _index_descriptions(self, sq_lite: SqLite, language: str = "cs") -> None:
-        pass
+        if language == "cs":
+            result = sq_lite.query_data(get_descriptions_czech_nkod, {"table_name": self.sql_table_name})
+        else: # language == "en"
+            result = sq_lite.query_data(get_descriptions_english_nkod, {"table_name": self.sql_table_name})
+
+        split_sql = split_descs_or_titles_sql_output(result, f"description_{language}")
+        print_descs_stats(split_sql, f"description_{language}", language)
 
     def _index_titles(self, sq_lite: SqLite, language: str = "cs") -> None:
-        pass
+        if language == "cs":
+            result = sq_lite.query_data(get_titles_czech_nkod, {"table_name": self.sql_table_name})
+        else:  # language == "en"
+            result = sq_lite.query_data(get_titles_english_nkod, {"table_name": self.sql_table_name})
+
+        split_sql = split_descs_or_titles_sql_output(result, f"title_{language}")
+        print_titles_stats(split_sql, f"title_{language}", language)
 
     def index_catalog_metadata(self, sq_lite: SqLite) -> None:
         self._index_keywords(sq_lite)
+        self._index_keywords(sq_lite, language="en")
         self._index_descriptions(sq_lite)
+        self._index_descriptions(sq_lite, language="en")
         self._index_titles(sq_lite)
+        self._index_titles(sq_lite, language="en")
 
     def create_metadata_csv(self, graph_db: GraphDb) -> None:
         sparql_results = graph_db.query_sparql_remote(get_catalogs_metadata_nkod_remote, self.NKOD_ENDPOINT)
@@ -97,17 +120,16 @@ class NkodDataProcessor(BaseDataProcessor):
             for ds, vals in table.items():
                 writer.writerow([
                     ds,
-                    "; ".join(sorted(vals["title_cs"])),
-                    "; ".join(sorted(vals["title_en"])),
-                    "; ".join(sorted(vals["desc_cs"])),
-                    "; ".join(sorted(vals["desc_en"])),
-                    "; ".join(sorted(vals["keywords_cs"])),
-                    "; ".join(sorted(vals["keywords_en"])),
+                    ";_; ".join(sorted(vals["title_cs"])),
+                    ";_; ".join(sorted(vals["title_en"])),
+                    ";_; ".join(sorted(vals["desc_cs"])),
+                    ";_; ".join(sorted(vals["desc_en"])),
+                    ";_; ".join(sorted(vals["keywords_cs"])),
+                    ";_; ".join(sorted(vals["keywords_en"])),
                 ])
 
         print(f"Created metadata CSV file at {self.metadata_csv_path}")
 
-    
     def create_metadata_sql(self, sq_lite: SqLite):
         sq_lite.create_table(self.sql_table_name, self.sql_columns)
         sq_lite.insert_data_from_csv(self.sql_table_name, self.metadata_csv_path)

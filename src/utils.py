@@ -1,5 +1,6 @@
 import re, unicodedata
 from bs4 import BeautifulSoup
+import numpy as np
 
 
 def strip_text(txt: str) -> str:
@@ -25,3 +26,51 @@ def clean_text(txt: str) -> str:
     cleaned_txt = replace_newlines_and_tabs(unicode_removed)
 
     return cleaned_txt
+
+def split_keywords_sql_output(sql_output: list, properties_key: str) -> list[dict]:
+    split_output = []
+
+    for dataset_uri, item in sql_output:
+        properties = []
+        if item is not None:
+            properties = item.split(';_; ')
+        split_output.append(
+            {
+                "dataset_uri": dataset_uri,
+                properties_key: properties
+            }
+        )
+
+    return split_output
+
+def split_descs_or_titles_sql_output(sql_output: list, properties_key: str) -> list[dict]:
+    split_output = []
+
+    for dataset_uri, desc in sql_output:
+        split_output.append(
+            {
+                "dataset_uri": dataset_uri,
+                properties_key: desc
+            }
+        )
+
+    return split_output
+
+def print_keywords_stats(split_sql_output: list[dict], properties_key: str, language: str) -> None:
+    n_keywords = []
+
+    for item in split_sql_output:
+        n_keywords.append(len(item[properties_key]))
+
+    mean_keywords = np.array(n_keywords).mean()
+    print(f"Mean number of {language} keywords: {mean_keywords}")
+
+def print_titles_stats(split_sql_output: list[dict], properties_key: str, language: str) -> None:
+    n_titles = [0 if title[properties_key] is None else 1 for title in split_sql_output]
+    mean_titles = np.array(n_titles).mean()
+    print(f"Mean number of {language} titles that are not None: {mean_titles}")
+
+def print_descs_stats(split_sql_output: list[dict], properties_key: str, language: str) -> None:
+    n_descs = [0 if desc[properties_key] is None else 1 for desc in split_sql_output]
+    mean_descs = np.array(n_descs).mean()
+    print(f"Mean number of {language} descriptions that are not None: {mean_descs}")
