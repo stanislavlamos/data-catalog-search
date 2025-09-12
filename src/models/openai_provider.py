@@ -11,11 +11,12 @@ class OpenAILLMProvider(BaseLLMProvider):
         load_dotenv()
         self.llm = ChatOpenAI(model=model_name, temperature=temperature)
 
-    def chat(self, user_prompt: str, system_prompt: str, user_prompt_vars: dict | None = None, structured_output: BaseModel | None = None) -> str:
+    def chat(self, user_prompt: str, system_prompt: str, user_prompt_vars: dict | None = None, system_prompt_vars: dict | None = None, structured_output: BaseModel | None = None) -> str:
         if structured_output is not None:
             self.llm = self.llm.with_structured_output(structured_output)
 
         user_prompt = user_prompt.format(**(user_prompt_vars or {}))
+        system_prompt = system_prompt.format(**(system_prompt_vars or {}))
         messages = [
             SystemMessage(content=system_prompt),
             HumanMessage(content=user_prompt)

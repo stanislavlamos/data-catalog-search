@@ -33,7 +33,11 @@ class LanguageDetection(BaseModel):
 
 
 class TimeframeDetection(BaseModel):
-    timeframe: str = Field(..., description="Detected timeframe from the input text")
+    timeframe_specified: bool = Field(..., description="true if the user specified a timeframe, otherwise false.")
+    start_date: str | None = Field(..., description="Start date in YYYY-MM-DD format or None if not specified.")
+    end_date: str | None = Field(..., description="End date in YYYY-MM-DD format or None if not specified.")
 
     def __str__(self):
-        return self.timeframe
+        if self.timeframe_specified:
+            return f"{self.start_date}->{self.end_date}"
+        return "Timeframe not specified"
