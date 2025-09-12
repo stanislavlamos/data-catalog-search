@@ -6,4 +6,6 @@
 OPENAI_API_KEY=
 ANTHROPIC_API_KEY=
 GOOGLE_API_KEY=
+SOURCE_TOKEN= 
+INGEST_URL=https://in.logtail.com
 ```
