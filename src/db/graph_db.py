@@ -1,8 +1,5 @@
 import requests
 from SPARQLWrapper import SPARQLWrapper, JSON
-import csv
-from rdflib.namespace import XSD
-
 
 
 class GraphDb:
