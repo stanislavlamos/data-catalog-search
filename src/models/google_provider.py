@@ -33,10 +33,7 @@ class GeminiLLMProvider(BaseLLMProvider):
 class GeminiEmbeddingProvider(BaseEmbeddingProvider):
     def __init__(self, model_name: str):
         self.model_name = model_name
-        self.embeddings = GoogleGenerativeAIEmbeddings(
-            model=model_name,
-            dimensions=self.DEFAULT_DIMENSIONS
-        )
+        self.embeddings = GoogleGenerativeAIEmbeddings(model=model_name)
 
     def embed_documents(self, texts: List[str]) -> List[List[float]]:
         return self.embeddings.embed_documents(texts)

@@ -34,7 +34,7 @@ class AnthropicLLMProvider(BaseLLMProvider):
 class AnthropicEmbeddingProvider(BaseEmbeddingProvider):
     def __init__(self, model_name: str):
         self.model_name = model_name
-        self.embeddings = AnthropicEmbeddings(model=model_name, dimensions=self.DEFAULT_DIMENSIONS)
+        self.embeddings = AnthropicEmbeddings(model=model_name)
 
     def embed_documents(self, texts: List[str]) -> List[List[float]]:
         return self.embeddings.embed_documents(texts)

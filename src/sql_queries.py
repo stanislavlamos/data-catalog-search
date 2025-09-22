@@ -21,3 +21,11 @@ get_titles_english_nkod = """
 get_titles_czech_nkod = """
     SELECT dataset_uri, title_cs FROM {table_name}
 """
+
+get_titles_and_descs_czech_nkod = """
+    SELECT dataset_uri, title_cs, description_cs FROM {table_name}
+"""
+
+get_titles_and_descs_english_nkod = """
+    SELECT dataset_uri, title_en, description_en FROM {table_name}
+"""

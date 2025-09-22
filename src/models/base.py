@@ -15,7 +15,7 @@ class BaseLLMProvider(ABC):
 class BaseEmbeddingProvider(ABC):
     """Abstract base class for embedding providers"""
 
-    DEFAULT_DIMENSIONS = 1024
+    DEFAULT_DIMENSIONS = 1024 # Default embedding dimensions (currently not used)
 
     @abstractmethod
     def embed_documents(self, texts: List[str]) -> List[List[float]]:

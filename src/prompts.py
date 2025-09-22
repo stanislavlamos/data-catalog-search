@@ -1,8 +1,8 @@
-# You are a language classifier. Classify any text as Czech, English, or Other. If the text contains a mixture of Czech and English, or any other language, classify it as Other
+# You are a language classifier. Classify any text as Czech, English, or Other. If the text contains a mixture of Czech and English, or any other language, classify it as Other. Do not take entities and concrete names into account, such as: cities, names, places, food etc...
 language_detection_system = {
-    "gpt-5": "You are a helpful assistant, classify the given text as 'Czech', 'English', or 'Other'. If the text contains a mix of Czech and English, or any language other than Czech or English, classify it as 'Other'.",
-    "gpt-4.1": "You are a helpful assistant, classify the input text as one of the following: Czech, English, or Other. If the text is a mixture of Czech, English, or any other languages, classify it as Other.",
-    "gpt-3o": "You are a helpful assistant, classify the input text as 'Czech', 'English', or 'Other'. If the text contains a mix of languages, select 'Other'. Return your answer as a single word."
+    "gpt-5": "You are a helpful assistant, classify the given text as 'Czech', 'English', or 'Other'. If the text contains a mix of Czech and English, or any language other than Czech or English, classify it as 'Other'. Do not take entities and concrete names into account, such as: cities, names, places, food etc...",
+    "gpt-4.1": "You are a helpful assistant, classify the input text as one of the following: Czech, English, or Other. If the text is a mixture of Czech, English, or any other languages, classify it as Other. Do not take entities and concrete names into account, such as: cities, names, places, food etc...",
+    "gpt-3o": "You are a helpful assistant, classify the input text as 'Czech', 'English', or 'Other'. If the text contains a mix of languages, select 'Other'. Return your answer as a single word. Do not take entities and concrete names into account, such as: cities, names, places, food etc..."
 }
 
 language_detection_user = {
@@ -10,33 +10,45 @@ language_detection_user = {
         Here are some examples:
         "Hello" → english
         "Ahoj" → czech
+        "Official bulletin board Ostrava - Trebovice" → english
+        "Official bulletin board Rožnov pod Radhoštěm" → english
+        "ZPS obec Studenec" → czech
         "Hello, ahoj" → other
         "Bonjour" → other
     
-        Classify the following text:
+        Classify the following text: \n
         {text}
+        \n
     """,
 
     "gpt-4.1": """
         Here are some examples:
         "Hello" → english
         "Ahoj" → czech
+        "Official bulletin board Ostrava - Trebovice" → english
+        "Official bulletin board Rožnov pod Radhoštěm" → english
+        "ZPS obec Studenec" → czech
         "Hello, ahoj" → other
         "Bonjour" → other
     
-        Classify the following text:
+        Classify the following text: \n
         {text}
+        \n
     """,
 
     "gpt-3o": """
         Here are some examples:
         "Hello" → english
         "Ahoj" → czech
+        "Official bulletin board Ostrava - Trebovice" → english
+        "Official bulletin board Rožnov pod Radhoštěm" → english
+        "ZPS obec Studenec" → czech
         "Hello, ahoj" → other
         "Bonjour" → other
     
-        Classify the following text:
+        Classify the following text: \n
         {text}
+        \n
     """
 }
 
@@ -83,3 +95,49 @@ old_timeframe_detection_system = """
     return the absolute start and end dates based on today's date ({today}). 
     Always output in JSON format using the structured schema provided.
 """
+
+
+nkod_query_matching_dataset_simple_system = {
+    "gpt-5": """
+        You are a helpful assistant that generates possible user queries about NKOD datasets based on their titles and descriptions.
+        
+        Instructions:
+        Use only the provided title and description to generate relevant queries.
+        You can also look at the dataset URI for context, but do not include it in the queries.
+        Generate only one query that a user might ask to qet info about this dataset.
+        Take into account that the generated query has to be convertable to SPARQL.
+        Always output in JSON format using the structured schema provided.
+        Return only the generated query, nothing else.
+        The query should be in provided language (cs or en).
+    """
+}
+
+
+nkod_query_matching_dataset_simple_user = {
+    "gpt-5": """
+        Generates possible user query about NKOD datasets based on the provided title and description.
+        Use only the provided title and description to generate relevant queries.
+        You can also look at the dataset URI for context, but do not include it in the queries.
+        Take into account that the generated query has to be convertable to SPARQL.
+        Return only the generated query, nothing else.
+        The query should be in provided language (cs or en).
+        
+        Language: \n
+        {language}
+        \n
+        
+        Title: \n 
+        {title}
+        \n
+        
+        Description: \n 
+        {description}
+        \n
+        
+        Dataset URI (for context only): \n 
+        {dataset_uri}
+        \n
+    """
+}
+
+

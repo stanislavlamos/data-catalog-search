@@ -20,6 +20,7 @@ class NkodDataProcessor(BaseDataProcessor):
     METADATA_URL = "https://data.gov.cz/soubor/nkod.trig"
     NKOD_ENDPOINT = "https://data.gov.cz/sparql"
     BATCH_SIZE = 40000
+    URIS_TO_SKIP = "https://data.gov.cz/zdroj/podněty-na-data-k-otevření/"
 
     def __init__(self, catalog_name: str, metadata_fname: str = "nkod_metadata.trig"):
         super().__init__(catalog_name, metadata_fname)
@@ -129,6 +130,9 @@ class NkodDataProcessor(BaseDataProcessor):
             val = r["value"]["value"]
             lang = r.get("lang", {}).get("value", "")
 
+            if self.URIS_TO_SKIP in ds:
+                continue
+
             if ds not in table:
                 table[ds] = {
                     "keywords_cs": set(),
@@ -177,5 +181,7 @@ class NkodDataProcessor(BaseDataProcessor):
     def create_metadata_sql(self, sq_lite: SqLite):
         sq_lite.create_table(self.sql_table_name, self.sql_columns)
         sq_lite.insert_data_from_csv(self.sql_table_name, self.metadata_csv_path)
+
+        print(f"Created SQL table '{self.sql_table_name}' in {self.metadata_sql_path}")
 
 

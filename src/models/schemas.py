@@ -20,8 +20,8 @@ class EmbeddingType(str, Enum):
 
 
 class InputLanguage(str, Enum):
-    CZECH = "czech"
-    ENGLISH = "english"
+    CZECH = "cs"
+    ENGLISH = "en"
     OTHER = "other"
 
 
@@ -30,6 +30,10 @@ class LanguageDetection(BaseModel):
 
     def __str__(self):
         return self.language.value
+
+
+class QueryGeneration(BaseModel):
+    generated_query: str = Field(..., description="Generated query based on the input")
 
 
 class TimeframeDetection(BaseModel):

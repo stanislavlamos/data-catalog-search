@@ -5,6 +5,7 @@ from src.models.schemas import InputLanguage, TimeframeDetection
 from src.prompts import timeframe_detection_user, timeframe_detection_system
 from src.services.base_query_matcher import BaseQueryMatcher
 from src.services.nkod_data_processor import NkodDataProcessor
+from src.utils import get_uris_from_chroma_query
 
 
 class NkodQueryMatcher(BaseQueryMatcher):
@@ -15,45 +16,52 @@ class NkodQueryMatcher(BaseQueryMatcher):
         self.matching_titles = []
         self.matching_distributions = []
 
-    def low_k_intersection(self, k: int):
-        pass
+    def high_k_intersection(self, k: int, chroma_db: ChromaDb, nkod_data_processor: NkodDataProcessor, language: InputLanguage, embedding_provider: BaseEmbeddingProvider) -> list:
+        matching_titles = self.get_matching_titles(k, chroma_db, nkod_data_processor, language.value, embedding_provider)
+        matching_descriptions = self.get_matching_descriptions(k, chroma_db, nkod_data_processor, language.value, embedding_provider)
+        matching_keywords = self.get_matching_keywords(k, chroma_db, nkod_data_processor, language.value, embedding_provider)
+        matching_attributes = [matching_titles, matching_keywords, matching_descriptions]
+        intersection = self.get_intersection(matching_attributes)
 
-    def high_k_intersection(self, k: int):
-        pass
+        return intersection
 
-    def high_k_intersection_llm(self, k: int):
+    def high_k_intersection_llm(self, k: int, chroma_db: ChromaDb, nkod_data_processor: NkodDataProcessor, language: InputLanguage, embedding_provider: BaseEmbeddingProvider):
+        matching_titles = self.get_matching_titles(k, chroma_db, nkod_data_processor, language.value, embedding_provider)
+        matching_descriptions = self.get_matching_descriptions(k, chroma_db, nkod_data_processor, language.value, embedding_provider)
+        matching_keywords = self.get_matching_keywords(k, chroma_db, nkod_data_processor, language.value, embedding_provider)
+        matching_attributes = [matching_titles, matching_keywords, matching_descriptions]
+        intersection = self.get_intersection(matching_attributes)
+
+    def high_k_intersection_new_keywords(self, k: int):
         pass
 
     def get_matching_distributions(self):
         pass
 
-    def _get_matching_keywords(self, k: int, chroma_db: ChromaDb, nkod_data_processor: NkodDataProcessor, language: InputLanguage, embedding_provider: BaseEmbeddingProvider):
+    def get_matching_keywords(self, k: int, chroma_db: ChromaDb, nkod_data_processor: NkodDataProcessor, language: str, embedding_provider: BaseEmbeddingProvider) -> list[str]:
         collection_name = f"{nkod_data_processor.keywords_collection_name}_{language}"
         chroma_db.load_collection(collection_name, embedding_provider)
-        query_result = chroma_db.similarity_search([self.query], k)
+        query_result = get_uris_from_chroma_query(chroma_db.similarity_search([self.query], k)["metadatas"])
 
-    def _get_matching_descriptions(self, k: int, chroma_db: ChromaDb, nkod_data_processor: NkodDataProcessor, language: InputLanguage, embedding_provider: BaseEmbeddingProvider):
+        return query_result
+
+    def get_matching_descriptions(self, k: int, chroma_db: ChromaDb, nkod_data_processor: NkodDataProcessor, language: str, embedding_provider: BaseEmbeddingProvider) -> list[str]:
         collection_name = f"{nkod_data_processor.descriptions_collection_name}_{language}"
         chroma_db.load_collection(collection_name, embedding_provider)
-        query_result = chroma_db.similarity_search([self.query], k)
+        query_result = get_uris_from_chroma_query(chroma_db.similarity_search([self.query], k)["metadatas"])
 
-    def _get_matching_titles(self, k: int, chroma_db: ChromaDb, nkod_data_processor: NkodDataProcessor, language: InputLanguage, embedding_provider: BaseEmbeddingProvider):
+        return query_result
+
+    def get_matching_titles(self, k: int, chroma_db: ChromaDb, nkod_data_processor: NkodDataProcessor, language: str, embedding_provider: BaseEmbeddingProvider) -> list[str]:
         collection_name = f"{nkod_data_processor.titles_collection_name}_{language}"
         chroma_db.load_collection(collection_name, embedding_provider)
-        query_result = chroma_db.similarity_search([self.query], k)
+        query_result = get_uris_from_chroma_query(chroma_db.similarity_search([self.query], k)["metadatas"])
 
-    def _get_time_frame(self, llm_provider: BaseLLMProvider, model_name: str) -> TimeframeDetection:
-        today = date.today().isoformat()
-        response = llm_provider.chat(
-            user_prompt=timeframe_detection_user[model_name],
-            user_prompt_vars={
-                "user_query": self.query
-            },
-            system_prompt=timeframe_detection_system[model_name],
-            system_prompt_vars={
-                "today": today
-            },
-            structured_output=TimeframeDetection
-        )
+        return query_result
 
-        return response
+    def derive_k_keywords_from_query(self, k, query: str, language: InputLanguage, llm_provider: BaseLLMProvider, model_name: str) -> list[str]:
+        pass
+
+    def get_intersection(self, input_lists: list[list]) -> list:
+        return list(set(input_lists[0]).intersection(*map(set, input_lists[1:])))
+

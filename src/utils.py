@@ -2,6 +2,8 @@ import re, unicodedata
 from bs4 import BeautifulSoup
 import numpy as np
 from typing import Generator
+import random
+import json
 
 
 def strip_text(txt: str) -> str:
@@ -55,7 +57,7 @@ def split_descs_or_titles_sql_output(sql_output: list, properties_key: str) -> l
     split_output = []
 
     for dataset_uri, desc in sql_output:
-        if desc is not None:
+        if desc is not None and len(desc) != 0:
             split_output.append(
                 {
                     "dataset_uri": dataset_uri,
@@ -96,6 +98,10 @@ def prepare_nkod_keywords_for_chromadb(keywords_from_sql: list[dict], properties
     for idx, item in enumerate(keywords_from_sql):
         dataset_uri = {"dataset_uri": item["dataset_uri"]}
         keywords = [strip_text(to_lower(kw)) for kw in item[properties_key]]
+
+        if len(keywords) == 0:
+            continue
+
         cur_ids = [f"id_kw{idx}_{i}" for i in range(len(keywords))]
         cur_metadatas = [dataset_uri.copy() for i in range(len(keywords))]
         texts.extend(keywords)
@@ -115,8 +121,8 @@ def prepare_nkod_titles_and_descs_for_chromadb(sql_output: list[dict], propertie
         text = strip_text(to_lower(item[properties_key]))
         cur_id = f"id_item_{idx}"
         texts.append(text)
-        metadatas.extend(dataset_uri)
-        ids.extend(cur_id)
+        metadatas.append(dataset_uri)
+        ids.append(cur_id)
 
     return texts, ids, metadatas
 
@@ -124,4 +130,40 @@ def prepare_nkod_titles_and_descs_for_chromadb(sql_output: list[dict], propertie
 def batch_list(input_list: list, batch_size: int) -> Generator[list, None, None]:
     for i in range(0, len(input_list), batch_size):
         yield input_list[i:i + batch_size]
+
+
+def get_n_random_list_idxs(inp_lst_len: int, n: int, seed: int = 42) -> list:
+    random.seed(seed)
+    return random.sample(range(inp_lst_len), n)
+
+
+def save_list_as_jsonl(data: list, fpath: str) -> None:
+    with open(fpath, "w", encoding="utf-8") as f:
+        for entry in data:
+            f.write(json.dumps(entry, ensure_ascii=False) + "\n")
+
+    print(f"Saved {len(data)} entries to {fpath}")
+
+
+def split_dataset_creation_sql_output(sql_output: list, language: str) -> list[dict]:
+    split_output = []
+
+    for dataset_uri, title, desc in sql_output:
+        if desc is not None and len(desc) != 0 and title is not None and len(title) != 0:
+            split_output.append(
+                {
+                    "dataset_uri": dataset_uri,
+                    f"title_{language}": title,
+                    f"description_{language}": desc
+                }
+            )
+
+    return split_output
+
+
+def get_uris_from_chroma_query(query_result: list[list[dict]]) -> list[str]:
+    results = query_result[0]
+    output = [metadata_dict["dataset_uri"] for metadata_dict in results]
+
+    return output
 
