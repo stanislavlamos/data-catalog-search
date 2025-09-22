@@ -20,7 +20,7 @@ class NkodQueryMatcher(BaseQueryMatcher):
         matching_titles = self.get_matching_titles(k, chroma_db, nkod_data_processor, language.value, embedding_provider)
         matching_descriptions = self.get_matching_descriptions(k, chroma_db, nkod_data_processor, language.value, embedding_provider)
         matching_keywords = self.get_matching_keywords(k, chroma_db, nkod_data_processor, language.value, embedding_provider)
-        matching_attributes = [matching_titles, matching_keywords, matching_descriptions]
+        matching_attributes = [matching_titles, matching_descriptions, matching_keywords]
         intersection = self.get_intersection(matching_attributes)
 
         return intersection
