@@ -65,3 +65,7 @@ class NkodQueryMatcher(BaseQueryMatcher):
     def get_intersection(self, input_lists: list[list]) -> list:
         return list(set(input_lists[0]).intersection(*map(set, input_lists[1:])))
 
+    def evaluate_results(self, fpath: str):
+        # TODO pocitat zda je v intersection a v matching titles
+        pass
+

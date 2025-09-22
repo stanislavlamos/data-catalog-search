@@ -106,6 +106,7 @@ nkod_query_matching_dataset_simple_system = {
         You can also look at the dataset URI for context, but do not include it in the queries.
         Generate only one query that a user might ask to qet info about this dataset.
         Take into account that the generated query has to be convertable to SPARQL.
+        Queries has to simple, just take the title of the dataset and formulate it into question.
         Always output in JSON format using the structured schema provided.
         Return only the generated query, nothing else.
         The query should be in provided language (cs or en).
@@ -119,6 +120,7 @@ nkod_query_matching_dataset_simple_user = {
         Use only the provided title and description to generate relevant queries.
         You can also look at the dataset URI for context, but do not include it in the queries.
         Take into account that the generated query has to be convertable to SPARQL.
+        Queries has to simple, just take the title of the dataset and formulate it into question.
         Return only the generated query, nothing else.
         The query should be in provided language (cs or en).
         
