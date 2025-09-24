@@ -29,3 +29,19 @@ get_titles_and_descs_czech_nkod = """
 get_titles_and_descs_english_nkod = """
     SELECT dataset_uri, title_en, description_en FROM {table_name}
 """
+
+get_themes_labels_english_nkod = """
+    SELECT theme_name, theme_label_en FROM {table_name}
+"""
+
+get_themes_labels_czech_nkod = """
+    SELECT theme_name, theme_label_cz FROM {table_name}
+"""
+
+get_themes_definitions_english_nkod = """
+    SELECT theme_name, theme_definition_en FROM {table_name}
+"""
+
+get_themes_definitions_czech_nkod = """
+    SELECT theme_name, theme_definition_cz FROM {table_name}
+"""

@@ -4,6 +4,7 @@ import numpy as np
 from typing import Generator
 import random
 import json
+from src.models.schemas import DatasetSelectionOutput
 
 
 def strip_text(txt: str) -> str:
@@ -62,6 +63,21 @@ def split_descs_or_titles_sql_output(sql_output: list, properties_key: str) -> l
                 {
                     "dataset_uri": dataset_uri,
                     properties_key: desc
+                }
+            )
+
+    return split_output
+
+
+def split_themes_sql_output(sql_output: list, properties_key: str) -> list[dict]:
+    split_output = []
+
+    for theme_name, property in sql_output:
+        if property is not None and len(property) != 0:
+            split_output.append(
+                {
+                    "theme_name": theme_name,
+                    properties_key: property
                 }
             )
 
@@ -127,12 +143,44 @@ def prepare_nkod_titles_and_descs_for_chromadb(sql_output: list[dict], propertie
     return texts, ids, metadatas
 
 
+def prepare_nkod_themes_properties_for_chromadb(sql_output: list[dict], properties_key: str) -> tuple[list[str], list[str], list[dict]]:
+    texts = []
+    metadatas = []
+    ids = []
+
+    for idx, item in enumerate(sql_output):
+        dataset_uri = {"theme_name": item["theme_name"]}
+        text = strip_text(to_lower(item[properties_key]))
+        cur_id = f"id_item_{idx}"
+        texts.append(text)
+        metadatas.append(dataset_uri)
+        ids.append(cur_id)
+
+    return texts, ids, metadatas
+
+
+def prepare_nkod_titles_and_descs_for_chromadb(sql_output: list[dict], properties_key: str) -> tuple[list[str], list[str], list[dict]]:
+    texts = []
+    metadatas = []
+    ids = []
+
+    for idx, item in enumerate(sql_output):
+        dataset_uri = {"dataset_uri": item["dataset_uri"]}
+        text = strip_text(to_lower(item[properties_key]))
+        cur_id = f"id_item_{idx}"
+        texts.append(text)
+        metadatas.append(dataset_uri)
+        ids.append(cur_id)
+
+    return texts, ids, metadatas
+
+
 def batch_list(input_list: list, batch_size: int) -> Generator[list, None, None]:
     for i in range(0, len(input_list), batch_size):
         yield input_list[i:i + batch_size]
 
 
-def get_n_random_list_idxs(inp_lst_len: int, n: int, seed: int = 42) -> list:
+def get_n_random_list_idxs(inp_lst_len: int, n: int, seed: int = 15) -> list:
     random.seed(seed)
     return random.sample(range(inp_lst_len), n)
 
@@ -166,4 +214,29 @@ def get_uris_from_chroma_query(query_result: list[list[dict]]) -> list[str]:
     output = [metadata_dict["dataset_uri"] for metadata_dict in results]
 
     return output
+
+
+def load_jsonl_to_list(fpath: str) -> list[dict]:
+    data = []
+    with open(fpath, "r", encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if line:
+                data.append(json.loads(line))
+
+    return data
+
+
+def merge_chromadb_docs_with_metadatas(query_result: dict) -> list[dict]:
+    docs = query_result["documents"][0]
+    metadatas = query_result["metadatas"][0]
+
+    return [{"title": s, "dataset_uri": v} for s, d in zip(docs, metadatas) for k, v in d.items()]
+
+
+def get_relevance_score(output: DatasetSelectionOutput, target_uri: str) -> float:
+    for dataset in output.datasets:
+        if dataset.uri == target_uri:
+            return dataset.relevance_score
+    return 0.0
 

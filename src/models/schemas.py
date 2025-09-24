@@ -1,4 +1,6 @@
 from enum import Enum
+from typing import List
+
 from pydantic import BaseModel, Field
 
 
@@ -45,3 +47,13 @@ class TimeframeDetection(BaseModel):
         if self.timeframe_specified:
             return f"{self.start_date}->{self.end_date}"
         return "Timeframe not specified"
+
+
+class DatasetSelection(BaseModel):
+    title: str
+    uri: str
+    relevance_score: float
+
+
+class DatasetSelectionOutput(BaseModel):
+    datasets: List[DatasetSelection]
