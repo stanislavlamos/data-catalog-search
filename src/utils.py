@@ -209,12 +209,17 @@ def split_dataset_creation_sql_output(sql_output: list, language: str) -> list[d
     return split_output
 
 
-def get_uris_from_chroma_query(query_result: list[list[dict]]) -> list[str]:
+def get_uris_from_chroma_query(query_result: list[list[dict]], metadata_key: str = "dataset_uri") -> list[str]:
     results = query_result[0]
-    output = [metadata_dict["dataset_uri"] for metadata_dict in results]
+    output = [metadata_dict[metadata_key] for metadata_dict in results]
 
     return output
 
+def get_uris_and_scores_from_chroma_query(query_result_metadata: list[list[dict]], query_result_scores: list[list[float]], metadata_key: str) -> list[tuple[float, str]]:
+    uris = query_result_metadata[0] #[metadata_dict[metadata_key] for metadata_dict in query_result_metadata[0]]
+    scores = query_result_scores[0]
+
+    return list(zip(scores, uris))
 
 def load_jsonl_to_list(fpath: str) -> list[dict]:
     data = []

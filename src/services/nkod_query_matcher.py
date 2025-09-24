@@ -8,7 +8,7 @@ from src.prompts import timeframe_detection_user, timeframe_detection_system, nk
 from src.services.base_query_matcher import BaseQueryMatcher
 from src.services.nkod_data_processor import NkodDataProcessor
 from src.utils import get_uris_from_chroma_query, load_jsonl_to_list, merge_chromadb_docs_with_metadatas, \
-    get_relevance_score
+    get_relevance_score, get_uris_and_scores_from_chroma_query
 import numpy as np
 from itertools import product
 
@@ -57,34 +57,67 @@ class NkodQueryMatcher(BaseQueryMatcher):
     def get_matching_distributions(self):
         pass
 
-    def _get_matching_keywords(self, k: int, chroma_db: ChromaDb, nkod_data_processor: NkodDataProcessor, language: str, embedding_provider: BaseEmbeddingProvider) -> list[str]:
+    def _get_matching_keywords(self, k: int, chroma_db: ChromaDb, nkod_data_processor: NkodDataProcessor, language: str, embedding_provider: BaseEmbeddingProvider, with_scores: bool = False) -> list[str] | tuple[list[str], list[tuple[float, str]]]:
         collection_name = f"{nkod_data_processor.keywords_collection_name}_{language}"
         chroma_db.load_collection(collection_name, embedding_provider)
-        query_result = get_uris_from_chroma_query(chroma_db.similarity_search([self.query], k)["metadatas"])
+        similarity_search = chroma_db.similarity_search([self.query], k)
+        query_result = get_uris_from_chroma_query(similarity_search["metadatas"])
+        query_result_with_scores = get_uris_and_scores_from_chroma_query(similarity_search["documents"], similarity_search["distances"], "dataset_uri")
+
+        if with_scores:
+            return query_result, query_result_with_scores
 
         return query_result
 
-    def _get_matching_descriptions(self, k: int, chroma_db: ChromaDb, nkod_data_processor: NkodDataProcessor, language: str, embedding_provider: BaseEmbeddingProvider) -> list[str]:
+    def _get_matching_descriptions(self, k: int, chroma_db: ChromaDb, nkod_data_processor: NkodDataProcessor, language: str, embedding_provider: BaseEmbeddingProvider, with_scores: bool = False) -> list[str] | tuple[list[str], list[tuple[float, str]]]:
         collection_name = f"{nkod_data_processor.descriptions_collection_name}_{language}"
         chroma_db.load_collection(collection_name, embedding_provider)
-        query_result = get_uris_from_chroma_query(chroma_db.similarity_search([self.query], k)["metadatas"])
+        similarity_search = chroma_db.similarity_search([self.query], k)
+        query_result = get_uris_from_chroma_query(similarity_search["metadatas"])
+        query_result_with_scores = get_uris_and_scores_from_chroma_query(similarity_search["documents"], similarity_search["distances"], "dataset_uri")
+
+        if with_scores:
+            return query_result, query_result_with_scores
 
         return query_result
 
-    def get_matching_titles(self, k: int, chroma_db: ChromaDb, nkod_data_processor: NkodDataProcessor, language: str, embedding_provider: BaseEmbeddingProvider) -> list[str]:
+    def get_matching_titles(self, k: int, chroma_db: ChromaDb, nkod_data_processor: NkodDataProcessor, language: str, embedding_provider: BaseEmbeddingProvider, with_scores: bool = False) -> list[str] | tuple[list[str], list[tuple[float, str]]]:
         collection_name = f"{nkod_data_processor.titles_collection_name}_{language}"
         chroma_db.load_collection(collection_name, embedding_provider)
-        query_result = get_uris_from_chroma_query(chroma_db.similarity_search([self.query], k)["metadatas"])
+        similarity_search = chroma_db.similarity_search([self.query], k)
+        query_result = get_uris_from_chroma_query(similarity_search["metadatas"])
+        query_result_with_scores = get_uris_and_scores_from_chroma_query(similarity_search["documents"], similarity_search["distances"], "dataset_uri")
+
+        if with_scores:
+            return query_result,query_result_with_scores
 
         return query_result
 
-    def get_matching_theme_labels(self):
-        pass
+    def _get_matching_theme_labels(self, k: int, chroma_db: ChromaDb, nkod_data_processor: NkodDataProcessor, language: str, embedding_provider: BaseEmbeddingProvider, with_scores: bool = False) -> list[str] | tuple[list[str], list[tuple[float, str]]]:
+        collection_name = f"{nkod_data_processor.themes_labels_collection_name}_{language}"
+        chroma_db.load_collection(collection_name, embedding_provider)
+        similarity_search = chroma_db.similarity_search([self.query], k)
+        query_result = get_uris_from_chroma_query(similarity_search["metadatas"], "theme_name")
+        query_result_with_scores = get_uris_and_scores_from_chroma_query(similarity_search["documents"], similarity_search["distances"], "theme_name")
 
-    def get_mathcing_theme_definitions(self):
-        pass
+        if with_scores:
+            return query_result,query_result_with_scores
 
-    def get_matching_titles_llm(self, k: int, chroma_db: ChromaDb, nkod_data_processor: NkodDataProcessor, language: str, embedding_provider: BaseEmbeddingProvider) -> tuple[list[str], list[dict]]:
+        return query_result
+
+    def _get_matching_theme_definitions(self, k: int, chroma_db: ChromaDb, nkod_data_processor: NkodDataProcessor, language: str, embedding_provider: BaseEmbeddingProvider, with_scores: bool = False) -> list[str] | tuple[list[str], list[tuple[float, str]]]:
+        collection_name = f"{nkod_data_processor.themes_definitions_collection_name}_{language}"
+        chroma_db.load_collection(collection_name, embedding_provider)
+        similarity_search = chroma_db.similarity_search([self.query], k)
+        query_result = get_uris_from_chroma_query(similarity_search["metadatas"], "theme_name")
+        query_result_with_scores = get_uris_and_scores_from_chroma_query(similarity_search["documents"], similarity_search["distances"], "theme_name")
+
+        if with_scores:
+            return query_result,query_result_with_scores
+
+        return query_result
+
+    def get_matching_titles_llm(self, k: int, chroma_db: ChromaDb, nkod_data_processor: NkodDataProcessor, language: str, embedding_provider: BaseEmbeddingProvider, with_scores: bool = False) -> tuple[list[str], list[dict]]:
         collection_name = f"{nkod_data_processor.titles_collection_name}_{language}"
         chroma_db.load_collection(collection_name, embedding_provider)
         similarity_search_res = chroma_db.similarity_search([self.query], k)
@@ -92,6 +125,33 @@ class NkodQueryMatcher(BaseQueryMatcher):
         query_result = get_uris_from_chroma_query(similarity_search_res["metadatas"])
 
         return query_result, merged_docs_with_metadatas
+
+    def evaluate_on_ofn_dataset(self, chroma_db: ChromaDb, nkod_data_processor: NkodDataProcessor, language: str, embedding_provider: BaseEmbeddingProvider):
+        queries_dataset = load_jsonl_to_list("ofn_czech_matching_dataset.jsonl")
+        k = 20
+
+        for idx, dataset_item in enumerate(queries_dataset):
+            self.query = dataset_item["query"].lower()
+            cur_dataset = dataset_item["dataset_uris"][0] if len(dataset_item["dataset_uris"]) > 0 else ""
+            print(f"Query {idx+1}/{len(queries_dataset)}")
+            print(dataset_item)
+            query_result_definitions, query_result_with_scores_definitions = self._get_matching_theme_definitions(k, chroma_db, nkod_data_processor, language, embedding_provider, True)
+            query_result_labels, query_result_with_scores_labels = self._get_matching_theme_labels(k, chroma_db, nkod_data_processor, language, embedding_provider, True)
+            query_result_titles, query_result_with_scores_titles = self.get_matching_titles(k, chroma_db, nkod_data_processor, language, embedding_provider, True)
+            query_result_descriptions, query_result_with_scores_descriptions = self._get_matching_descriptions(k, chroma_db, nkod_data_processor, language, embedding_provider, True)
+            query_result_keywords, query_result_with_scores_keywords= self._get_matching_keywords(k, chroma_db, nkod_data_processor, language, embedding_provider, True)
+
+            print(f"In definitions: {cur_dataset in query_result_definitions}")
+            print(f"Definitions similarity matching: {query_result_with_scores_definitions}")
+            print(f"In labels: {cur_dataset in query_result_labels}")
+            print(f"Labels similarity matching: {query_result_with_scores_labels}")
+            print(f"In titles: {cur_dataset in query_result_titles}")
+            print(f"Titles similarity matching: {query_result_with_scores_titles}")
+            print(f"In descriptions: {cur_dataset in query_result_descriptions}")
+            print(f"Descriptions similarity matching: {query_result_with_scores_descriptions}")
+            print(f"In keywords: {cur_dataset in query_result_keywords}")
+            print(f"Keywords similarity matching: {query_result_with_scores_keywords}")
+            print("\n\n")
 
     def get_intersection(self, input_lists: list[list]) -> list:
         return list(set(input_lists[0]).intersection(*map(set, input_lists[1:])))
