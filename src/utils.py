@@ -40,21 +40,38 @@ def clean_text(txt: str) -> str:
 def split_keywords_sql_output(sql_output: list, properties_key: str) -> list[dict]:
     split_output = []
 
-    for dataset_uri, item in sql_output:
+    for dataset_uri, item, dataset_title in sql_output:
         properties = []
         if item is not None:
             properties = item.split(';_; ')
         split_output.append(
             {
                 "dataset_uri": dataset_uri,
-                properties_key: properties
+                properties_key: properties,
+                "dataset_title": dataset_title
             }
         )
 
     return split_output
 
 
-def split_descs_or_titles_sql_output(sql_output: list, properties_key: str) -> list[dict]:
+def split_descs_sql_output(sql_output: list, properties_key: str) -> list[dict]:
+    split_output = []
+
+    for dataset_uri, desc, dataset_title in sql_output:
+        if desc is not None and len(desc) != 0:
+            split_output.append(
+                {
+                    "dataset_uri": dataset_uri,
+                    properties_key: desc,
+                    "dataset_title": dataset_title
+                }
+            )
+
+    return split_output
+
+
+def split_titles_sql_output(sql_output: list, properties_key: str) -> list[dict]:
     split_output = []
 
     for dataset_uri, desc in sql_output:
@@ -67,7 +84,6 @@ def split_descs_or_titles_sql_output(sql_output: list, properties_key: str) -> l
             )
 
     return split_output
-
 
 def split_themes_sql_output(sql_output: list, properties_key: str) -> list[dict]:
     split_output = []
@@ -112,7 +128,7 @@ def prepare_nkod_keywords_for_chromadb(keywords_from_sql: list[dict], properties
     ids = []
 
     for idx, item in enumerate(keywords_from_sql):
-        dataset_uri = {"dataset_uri": item["dataset_uri"]}
+        dataset_uri = {"dataset_uri": item["dataset_uri"], "dataset_title": str(item["dataset_title"])}
         keywords = [strip_text(to_lower(kw)) for kw in item[properties_key]]
 
         if len(keywords) == 0:
@@ -127,13 +143,29 @@ def prepare_nkod_keywords_for_chromadb(keywords_from_sql: list[dict], properties
     return texts, ids, metadatas
 
 
-def prepare_nkod_titles_and_descs_for_chromadb(sql_output: list[dict], properties_key: str) -> tuple[list[str], list[str], list[dict]]:
+def prepare_nkod_descs_for_chromadb(sql_output: list[dict], properties_key: str) -> tuple[list[str], list[str], list[dict]]:
     texts = []
     metadatas = []
     ids = []
 
     for idx, item in enumerate(sql_output):
-        dataset_uri = {"dataset_uri": item["dataset_uri"]}
+        dataset_uri = {"dataset_uri": item["dataset_uri"], "dataset_title": str(item["dataset_title"])}
+        text = strip_text(to_lower(item[properties_key]))
+        cur_id = f"id_item_{idx}"
+        texts.append(text)
+        metadatas.append(dataset_uri)
+        ids.append(cur_id)
+
+    return texts, ids, metadatas
+
+
+def prepare_nkod_titles_for_chromadb(sql_output: list[dict], properties_key: str) -> tuple[list[str], list[str], list[dict]]:
+    texts = []
+    metadatas = []
+    ids = []
+
+    for idx, item in enumerate(sql_output):
+        dataset_uri = {"dataset_uri": item["dataset_uri"], "dataset_title": str(item[properties_key])}
         text = strip_text(to_lower(item[properties_key]))
         cur_id = f"id_item_{idx}"
         texts.append(text)
@@ -215,11 +247,11 @@ def get_uris_from_chroma_query(query_result: list[list[dict]], metadata_key: str
 
     return output
 
-def get_uris_and_scores_from_chroma_query(query_result_metadata: list[list[dict]], query_result_scores: list[list[float]], metadata_key: str) -> list[tuple[float, str]]:
-    uris = query_result_metadata[0] #[metadata_dict[metadata_key] for metadata_dict in query_result_metadata[0]]
+def get_docs_and_scores_from_chroma_query(query_result_metadata: list[list[dict]], query_result_scores: list[list[float]], metadata_key: str) -> list[tuple[float, str]]:
+    docs = query_result_metadata[0]
     scores = query_result_scores[0]
 
-    return list(zip(scores, uris))
+    return list(zip(scores, docs))
 
 def load_jsonl_to_list(fpath: str) -> list[dict]:
     data = []
@@ -245,3 +277,33 @@ def get_relevance_score(output: DatasetSelectionOutput, target_uri: str) -> floa
             return dataset.relevance_score
     return 0.0
 
+
+def get_intersection(input_lists: list[list]) -> list:
+    return list(set(input_lists[0]).intersection(*map(set, input_lists[1:])))
+
+
+def get_overlap_info(inp_lst: list, out_lst: list) -> str:
+    overlap = []
+    positions = []
+
+    for item in inp_lst:
+        if item in out_lst:
+            pos = out_lst.index(item)
+            overlap.append(item)
+            positions.append(pos)
+
+    count = len(overlap)
+
+    if count == 0:
+        return f"False -> 0/0 present | positions: []"
+    else:
+        return f"True -> {count}/{len(inp_lst)} present | positions: {positions}"
+
+
+def merge_lst_with_tuple_lst(lst: list, tpl_lst: list[tuple]) -> list[dict]:
+    merged = []
+
+    for item, tpl in zip(lst, tpl_lst):
+        merged.append({"doc": tpl[1], "dataset_uri": item})
+
+    return merged

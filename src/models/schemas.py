@@ -50,7 +50,7 @@ class TimeframeDetection(BaseModel):
 
 
 class DatasetSelection(BaseModel):
-    title: str
+    doc: str
     uri: str
     relevance_score: float
 

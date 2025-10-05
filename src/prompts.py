@@ -143,20 +143,21 @@ nkod_query_matching_dataset_simple_user = {
 }
 
 
-nkod_query_mathching_llm_judge_system = {
+nkod_query_matching_llm_judge_system = {
     "gpt-5": """
         You are an advanced dataset recommender.
-        You will be given a user query and a list of candidate datasets (title + URI).
-        Your task is to select the minimal set of datasets that best reflect the user query.
-        Consider relevance, coverage, and complementarity.
+        You will be given a user query and a list of candidate datasets (Doc + URI).
+        Your task is to rerank the datasets that based on how they reflect the user query.
+        Consider relevance, coverage, and complementarity of the Doc field to the query from the user.
         Rank the selected datasets from most relevant to least relevant.
         Return in the provided structured format.
+        Do not change the URIs or Docs.
     """
 }
 
-nkod_query_mathching_llm_judge_user = {
+nkod_query_matching_llm_judge_user = {
     "gpt-5": """
-        You are given a user query describing the datasets they need, and a list of candidate datasets with titles and URIs.
+        You are given a user query describing the datasets they need, and a list of candidate datasets with Doc and URIs.
 
         User Query:
         {user_query}
@@ -164,10 +165,9 @@ nkod_query_mathching_llm_judge_user = {
         Candidate Datasets:
         {datasets}
         
-        Your task is to select the minimal set of datasets that best satisfies the user's query.
+        Your task is to rerank the datasets based on how they satisfy the user's query.
         - Consider relevance, coverage, and complementarity.
         - Rank datasets from most relevant to least relevant.
-        - Only include datasets that contribute meaningfully to answering the query.
         - Assign a relevance_score between 0 (irrelevant) and 1 (perfectly relevant).
         
         Return the output in the provided structured format.

@@ -7,7 +7,7 @@ from src.models.base import BaseLLMProvider, BaseEmbeddingProvider
 
 
 class OpenAILLMProvider(BaseLLMProvider):
-    def __init__(self, model_name: str, temperature: float):
+    def __init__(self, model_name: str, temperature: float = 1.0):
         load_dotenv()
         self.temperature = temperature
         self.model_name = model_name
@@ -30,9 +30,9 @@ class OpenAILLMProvider(BaseLLMProvider):
 
 
 class OpenAIEmbeddingProvider(BaseEmbeddingProvider):
-    def __init__(self, model_name: str):
+    def __init__(self, model_name: str, dimensions: int | None = None):
         self.model_name = model_name
-        self.embeddings = OpenAIEmbeddings(model=model_name)
+        self.embeddings = OpenAIEmbeddings(model=self.model_name, dimensions=dimensions)
 
     def embed_documents(self, texts: List[str]) -> List[List[float]]:
         return self.embeddings.embed_documents(texts)

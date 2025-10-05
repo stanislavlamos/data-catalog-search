@@ -12,9 +12,10 @@ from src.services.base_data_processor import BaseDataProcessor
 from ..sql_queries import get_keywords_czech_nkod, get_keywords_english_nkod, get_descriptions_czech_nkod, \
     get_descriptions_english_nkod, get_titles_english_nkod, get_titles_czech_nkod, get_themes_labels_english_nkod, \
     get_themes_labels_czech_nkod, get_themes_definitions_czech_nkod, get_themes_definitions_english_nkod
-from ..utils import split_keywords_sql_output, print_keywords_stats, split_descs_or_titles_sql_output, \
+from ..utils import split_keywords_sql_output, print_keywords_stats, \
     print_titles_stats, print_descs_stats, prepare_nkod_keywords_for_chromadb, batch_list, \
-    prepare_nkod_titles_and_descs_for_chromadb, split_themes_sql_output, prepare_nkod_themes_properties_for_chromadb
+    split_themes_sql_output, prepare_nkod_themes_properties_for_chromadb, \
+    split_descs_sql_output, split_titles_sql_output, prepare_nkod_descs_for_chromadb, prepare_nkod_titles_for_chromadb
 
 
 class NkodDataProcessor(BaseDataProcessor):
@@ -96,8 +97,8 @@ class NkodDataProcessor(BaseDataProcessor):
         else: # language == "en"
             result = sq_lite.query_data(get_descriptions_english_nkod, {"table_name": self.metadata_sql_table_name})
 
-        split_sql = split_descs_or_titles_sql_output(result, f"description_{language}")
-        texts, ids, metadatas = prepare_nkod_titles_and_descs_for_chromadb(split_sql, f"description_{language}")
+        split_sql = split_descs_sql_output(result, f"description_{language}")
+        texts, ids, metadatas = prepare_nkod_descs_for_chromadb(split_sql, f"description_{language}")
         num_batches = math.ceil(len(texts) / self.BATCH_SIZE)
         batched_texts = batch_list(texts, self.BATCH_SIZE)
         batched_ids = batch_list(ids, self.BATCH_SIZE)
@@ -116,8 +117,8 @@ class NkodDataProcessor(BaseDataProcessor):
         else:  # language == "en"
             result = sq_lite.query_data(get_titles_english_nkod, {"table_name": self.metadata_sql_table_name})
 
-        split_sql = split_descs_or_titles_sql_output(result, f"title_{language}")
-        texts, ids, metadatas = prepare_nkod_titles_and_descs_for_chromadb(split_sql, f"title_{language}")
+        split_sql = split_titles_sql_output(result, f"title_{language}")
+        texts, ids, metadatas = prepare_nkod_titles_for_chromadb(split_sql, f"title_{language}")
         num_batches = math.ceil(len(texts) / self.BATCH_SIZE)
         batched_texts = batch_list(texts, self.BATCH_SIZE)
         batched_ids = batch_list(ids, self.BATCH_SIZE)
