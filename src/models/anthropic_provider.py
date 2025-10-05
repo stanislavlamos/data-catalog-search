@@ -8,7 +8,7 @@ from src.models.base import BaseLLMProvider, BaseEmbeddingProvider
 
 
 class AnthropicLLMProvider(BaseLLMProvider):
-    def __init__(self, model_name: str, temperature: float):
+    def __init__(self, model_name: str, temperature: float = 1.0):
         load_dotenv()
         self.llm = ChatAnthropic(model=model_name, temperature=temperature)
 

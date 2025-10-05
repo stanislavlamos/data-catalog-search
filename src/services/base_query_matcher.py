@@ -1,7 +1,9 @@
-from abc import abstractmethod, ABC
+from abc import ABC
 
 
 class BaseQueryMatcher(ABC):
-    @abstractmethod
-    def get_matching_distributions(self):
-        pass
+
+    DATA_DIR = "data"
+
+    def __init__(self, query: str):
+        self.query = query
