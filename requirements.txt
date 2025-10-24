@@ -1,3 +1,4 @@
+streamlit
 tqdm
 pandas~=2.2.3
 requests~=2.32.3
@@ -12,3 +13,11 @@ langchain-openai~=0.3.12
 pathlib~=1.0.1
 numpy~=2.2.4
 beautifulsoup4~=4.13.3
+openai
+anthropic
+google-cloud
+uvicorn
+sqlalchemy
+pytest
+jinja2
+scikit-learn

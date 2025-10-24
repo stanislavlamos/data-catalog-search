@@ -3,7 +3,7 @@ from pathlib import Path
 
 from src.db.chroma_db import ChromaDb
 from src.models.base import BaseEmbeddingProvider, BaseLLMProvider
-from src.models.schemas import InputLanguage, DatasetSelectionOutput
+from src.schemas.schemas import InputLanguage, DatasetSelectionOutput
 from src.prompts import nkod_query_matching_llm_judge_user, \
     nkod_query_matching_llm_judge_system
 from src.services.base_query_matcher import BaseQueryMatcher

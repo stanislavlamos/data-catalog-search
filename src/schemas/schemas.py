@@ -14,6 +14,8 @@ class LlmType(str, Enum):
     GPT_5 = "gpt-5"
     GPT_4_1 = "gpt-4.1"
     GPT_3o = "gpt-3o"
+    CLAUDE_SONNET_4_5 = "claude_sonnet_4.5"
+    CLAUDE_SONNET_4 = "claude_sonnet_4"
 
 
 class EmbeddingType(str, Enum):
@@ -57,3 +59,19 @@ class DatasetSelection(BaseModel):
 
 class DatasetSelectionOutput(BaseModel):
     datasets: List[DatasetSelection]
+
+
+class NkodDistribution(BaseModel):
+    distribution: str | None = Field(None, description="URI of the distribution")
+    format: str | None = Field(None, description="Format of the distribution")
+    downloadURL: str | None = Field(None, description="Download URL of the distribution")
+    accessURL: str | None = Field(None, description="Access URL of the distribution")
+    conformsTo: str | None = Field(None, description="Conformance information of the distribution")
+
+
+class NkodTemporalMetadata(BaseModel):
+    dataset: str | None = Field(None, description="URI of the dataset")
+    startDate: str | None = Field(None, description="Start date of the dataset")
+    endDate: str | None = Field(None, description="End date of the dataset")
+    agentCs: str | None = Field(None, description="Publisher of the dataset in Czech")
+    agentEn: str | None = Field(None, description="Publisher of the dataset in English")

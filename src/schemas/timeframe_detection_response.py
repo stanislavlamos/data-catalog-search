@@ -2,4 +2,6 @@ from pydantic import BaseModel
 
 
 class TimeframeDetectionResponse(BaseModel):
-    text: str
+    timeframe_specified: bool
+    start_date: str | None
+    end_date: str | None

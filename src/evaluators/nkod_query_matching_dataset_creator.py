@@ -4,7 +4,7 @@ from src.models.base import BaseLLMProvider
 from src.utils import get_n_random_list_idxs, save_list_as_jsonl, \
     split_dataset_creation_sql_output
 from src.db.sq_lite import SqLite
-from src.models.schemas import InputLanguage, QueryGeneration
+from src.schemas.schemas import InputLanguage, QueryGeneration
 from src.services.nkod_data_processor import NkodDataProcessor
 from src.sql_queries import get_titles_and_descs_czech_nkod, get_titles_and_descs_english_nkod
 

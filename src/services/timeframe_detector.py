@@ -1,6 +1,6 @@
 from datetime import date
 from src.models.base import BaseLLMProvider
-from src.models.schemas import TimeframeDetection
+from src.schemas.schemas import TimeframeDetection
 from src.prompts import timeframe_detection_user, timeframe_detection_system
 
 

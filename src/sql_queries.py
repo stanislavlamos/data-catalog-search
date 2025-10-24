@@ -45,3 +45,11 @@ get_themes_definitions_english_nkod = """
 get_themes_definitions_czech_nkod = """
     SELECT theme_name, theme_definition_cz FROM {table_name}
 """
+
+get_titles_from_uri_czech_nkod = """
+    SELECT title_cs FROM {table_name} WHERE dataset_uri = '{dataset_uri}'
+"""
+
+get_titles_from_uri_english_nkod = """
+    SELECT title_en FROM {table_name} WHERE dataset_uri = '{dataset_uri}'
+"""

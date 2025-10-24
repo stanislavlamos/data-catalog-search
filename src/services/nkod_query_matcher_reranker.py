@@ -1,5 +1,5 @@
 from src.models.base import BaseLLMProvider
-from src.models.schemas import DatasetSelectionOutput
+from src.schemas.schemas import DatasetSelectionOutput
 from src.prompts import nkod_query_matching_llm_judge_user, nkod_query_matching_llm_judge_system
 
 

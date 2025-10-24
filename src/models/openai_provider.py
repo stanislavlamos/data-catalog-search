@@ -24,6 +24,9 @@ class OpenAILLMProvider(BaseLLMProvider):
             SystemMessage(content=system_prompt),
             HumanMessage(content=user_prompt)
         ]
+
+        print(user_prompt)
+
         response = llm.invoke(messages)
 
         return response

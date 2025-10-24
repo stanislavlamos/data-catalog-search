@@ -2,7 +2,7 @@ from datetime import datetime
 from itertools import product
 from src.db.chroma_db import ChromaDb
 from src.models.base import BaseEmbeddingProvider, BaseLLMProvider
-from src.models.schemas import InputLanguage, DatasetSelectionOutput
+from src.schemas.schemas import InputLanguage, DatasetSelectionOutput
 from src.services.nkod_data_processor import NkodDataProcessor
 from src.services.nkod_query_matcher import NkodQueryMatcher
 import numpy as np

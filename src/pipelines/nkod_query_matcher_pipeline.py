@@ -5,6 +5,7 @@ from src.schemas.nkod_query_matcher_response import NkodQueryMatcherResponse
 from src.services.nkod_data_processor import NkodDataProcessor
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from src.services.nkod_query_matcher import NkodQueryMatcher
+from src.services.nkod_query_matcher_reranker import NkodQueryMatcherReranker
 
 
 class NkodQueryMatcherPipeline:
@@ -17,6 +18,7 @@ class NkodQueryMatcherPipeline:
         self.language = None
         self.nkod_query_matcher = None
         self.k = 30
+        self.nkod_query_reranker = None
 
     def run(self, request: NkodQueryMatcherRequest) -> NkodQueryMatcherResponse:
         self.nkod_data_processor = NkodDataProcessor("nkod")
@@ -26,6 +28,7 @@ class NkodQueryMatcherPipeline:
         self.language = request.language
         self.query = request.query
         self.nkod_query_matcher = NkodQueryMatcher(self.query)
+        self.nkod_query_reranker = NkodQueryMatcherReranker()
 
         self._run_query_matching_parallel()
 

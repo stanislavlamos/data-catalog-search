@@ -18,4 +18,8 @@ class TimeframeDetectionPipeline:
             llm_provider=llm_provider
         )
 
-        return TimeframeDetectionResponse(text=str(response))
+        return TimeframeDetectionResponse(
+            timeframe_specified=response.timeframe_specified,
+            start_date=response.start_date,
+            end_date=response.end_date
+        )

@@ -4,7 +4,7 @@ import numpy as np
 from typing import Generator
 import random
 import json
-from src.models.schemas import DatasetSelectionOutput
+from src.schemas.schemas import DatasetSelectionOutput
 
 
 def strip_text(txt: str) -> str:
@@ -307,3 +307,7 @@ def merge_lst_with_tuple_lst(lst: list, tpl_lst: list[tuple]) -> list[dict]:
         merged.append({"doc": tpl[1], "dataset_uri": item})
 
     return merged
+
+
+def delete_sparql_backticks(inp_str: str) -> str:
+    return inp_str.replace("```sparql", "").replace("```", "")
