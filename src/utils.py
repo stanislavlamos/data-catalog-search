@@ -5,6 +5,7 @@ from typing import Generator
 import random
 import json
 from src.schemas.schemas import DatasetSelectionOutput
+import pandas as pd
 
 
 def strip_text(txt: str) -> str:
@@ -40,7 +41,7 @@ def clean_text(txt: str) -> str:
 def split_keywords_sql_output(sql_output: list, properties_key: str) -> list[dict]:
     split_output = []
 
-    for dataset_uri, item, dataset_title in sql_output:
+    for dataset_uri, item, dataset_title, has_rdf_distribution in sql_output:
         properties = []
         if item is not None:
             properties = item.split(';_; ')
@@ -48,7 +49,8 @@ def split_keywords_sql_output(sql_output: list, properties_key: str) -> list[dic
             {
                 "dataset_uri": dataset_uri,
                 properties_key: properties,
-                "dataset_title": dataset_title
+                "dataset_title": dataset_title,
+                "has_rdf_distribution": has_rdf_distribution
             }
         )
 
@@ -58,13 +60,14 @@ def split_keywords_sql_output(sql_output: list, properties_key: str) -> list[dic
 def split_descs_sql_output(sql_output: list, properties_key: str) -> list[dict]:
     split_output = []
 
-    for dataset_uri, desc, dataset_title in sql_output:
+    for dataset_uri, desc, dataset_title, has_rdf_distribution in sql_output:
         if desc is not None and len(desc) != 0:
             split_output.append(
                 {
                     "dataset_uri": dataset_uri,
                     properties_key: desc,
-                    "dataset_title": dataset_title
+                    "dataset_title": dataset_title,
+                    "has_rdf_distribution": has_rdf_distribution
                 }
             )
 
@@ -74,12 +77,13 @@ def split_descs_sql_output(sql_output: list, properties_key: str) -> list[dict]:
 def split_titles_sql_output(sql_output: list, properties_key: str) -> list[dict]:
     split_output = []
 
-    for dataset_uri, desc in sql_output:
+    for dataset_uri, desc, has_rdf_distribution in sql_output:
         if desc is not None and len(desc) != 0:
             split_output.append(
                 {
                     "dataset_uri": dataset_uri,
-                    properties_key: desc
+                    properties_key: desc,
+                    "has_rdf_distribution": has_rdf_distribution
                 }
             )
 
@@ -128,14 +132,14 @@ def prepare_nkod_keywords_for_chromadb(keywords_from_sql: list[dict], properties
     ids = []
 
     for idx, item in enumerate(keywords_from_sql):
-        dataset_uri = {"dataset_uri": item["dataset_uri"], "dataset_title": str(item["dataset_title"])}
+        metadata = {"dataset_uri": item["dataset_uri"], "dataset_title": str(item["dataset_title"]), "has_rdf_distribution": item["has_rdf_distribution"]}
         keywords = [strip_text(to_lower(kw)) for kw in item[properties_key]]
 
         if len(keywords) == 0:
             continue
 
         cur_ids = [f"id_kw{idx}_{i}" for i in range(len(keywords))]
-        cur_metadatas = [dataset_uri.copy() for i in range(len(keywords))]
+        cur_metadatas = [metadata.copy() for i in range(len(keywords))]
         texts.extend(keywords)
         metadatas.extend(cur_metadatas)
         ids.extend(cur_ids)
@@ -149,11 +153,11 @@ def prepare_nkod_descs_for_chromadb(sql_output: list[dict], properties_key: str)
     ids = []
 
     for idx, item in enumerate(sql_output):
-        dataset_uri = {"dataset_uri": item["dataset_uri"], "dataset_title": str(item["dataset_title"])}
+        metadata = {"dataset_uri": item["dataset_uri"], "dataset_title": str(item["dataset_title"]), "has_rdf_distribution": item["has_rdf_distribution"]}
         text = strip_text(to_lower(item[properties_key]))
         cur_id = f"id_item_{idx}"
         texts.append(text)
-        metadatas.append(dataset_uri)
+        metadatas.append(metadata)
         ids.append(cur_id)
 
     return texts, ids, metadatas
@@ -165,11 +169,11 @@ def prepare_nkod_titles_for_chromadb(sql_output: list[dict], properties_key: str
     ids = []
 
     for idx, item in enumerate(sql_output):
-        dataset_uri = {"dataset_uri": item["dataset_uri"], "dataset_title": str(item[properties_key])}
+        metadata = {"dataset_uri": item["dataset_uri"], "dataset_title": str(item[properties_key]), "has_rdf_distribution": item["has_rdf_distribution"]}
         text = strip_text(to_lower(item[properties_key]))
         cur_id = f"id_item_{idx}"
         texts.append(text)
-        metadatas.append(dataset_uri)
+        metadatas.append(metadata)
         ids.append(cur_id)
 
     return texts, ids, metadatas
@@ -240,9 +244,26 @@ def split_dataset_creation_sql_output(sql_output: list, language: str) -> list[d
 
     return split_output
 
+def parse_chroma_output(query_result: dict[str, list[list[dict]]]) -> list[dict]:
+    print("query_result:", query_result)
+    docs = query_result["documents"][0]
+    metadatas = query_result["metadatas"][0]
+    scores = query_result["distances"][0]
+    output = []
+    
+    for doc, metadata_dict, score in zip(docs, metadatas, scores):
+        metadata_dict["score"] = score
+        metadata_dict["doc"] = doc
+        output.append(metadata_dict)
 
-def get_uris_from_chroma_query(query_result: list[list[dict]], metadata_key: str = "dataset_uri") -> list[str]:
-    results = query_result[0]
+    return output
+
+def get_uris_from_chroma_query(query_result: dict[str, list[list[dict]]], metadata_key: str = "dataset_uri") -> list[str]:
+    # TODO: nahradit pomoci parse_chroma_output
+    print("query_result:", query_result)
+    docs = query_result["documents"][0]
+    metadatas = query_result["metadatas"][0]
+    scores = query_result["distances"][0]
     output = [metadata_dict[metadata_key] for metadata_dict in results]
 
     return output
@@ -311,3 +332,7 @@ def merge_lst_with_tuple_lst(lst: list, tpl_lst: list[tuple]) -> list[dict]:
 
 def delete_sparql_backticks(inp_str: str) -> str:
     return inp_str.replace("```sparql", "").replace("```", "")
+
+
+def intersect_dataframes(df1: pd.DataFrame, df2: pd.DataFrame, left_on: str, right_on: str) -> pd.DataFrame:
+    return pd.merge(df1, df2, left_on=left_on, right_on=right_on, how='inner')

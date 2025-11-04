@@ -200,12 +200,27 @@ WHERE {
 """
 
 
-get_realtionships_nkod_local = """
+get_relationships_nkod_local = """
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 
 SELECT DISTINCT ?rel ?com
 WHERE {
     ?subj ?rel ?obj . 
     OPTIONAL { ?rel rdfs:comment ?com }
+}
+"""
+
+
+get_all_distributions_and_formats_nkod_remote = """
+PREFIX dcat: <http://www.w3.org/ns/dcat#>
+PREFIX dct: <http://purl.org/dc/terms/>
+
+SELECT ?dataset ?distribution ?format
+WHERE {
+  ?dataset a dcat:Dataset .
+  OPTIONAL {
+    ?dataset dcat:distribution ?distribution .
+    ?distribution dct:format ?format .
+  }
 }
 """

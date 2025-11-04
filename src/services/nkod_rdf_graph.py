@@ -45,6 +45,8 @@ class NkodRdfGraph:
         return ds
 
     def query_graph(self, query) -> list:
+        print(f"Executing SPARQL query:\n{query}\n")
+        print(self.graph)
         return list(self.graph.query(query))
 
     @staticmethod
@@ -62,6 +64,7 @@ class NkodRdfGraph:
 
         g = Graph()
         graph_format = distribution.format.lower().replace(NKOD_FILE_FORMAT_PREFIX, "")
+        print(distribution.downloadURL)
         g.parse(distribution.downloadURL, format=distribution_format_to_rdf_format[graph_format])
 
         return g

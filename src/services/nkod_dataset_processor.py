@@ -21,15 +21,14 @@ class NkodDatasetProcessor:
             "xml": "xml"
         }
         self.nonrdf_file_formats_schema = ['csv', 'json', 'xml']
-        # TODO: what about XML files (are they RDF???)?
         self.rdf_file_formats = ['jsonld', 'ttl', 'trig', 'rdf', 'nq', 'nt']
         self.schema_and_distribution_preference = {
             "ttl": 0,
             "rdf": 1,
             "jsonld": 2,
             "trig": 3,
-            "nq": 4,  # TODO: probrat
-            "nt": 5  # TODO: probrat
+            "nq": 4,  
+            "nt": 5
         }
 
     def process_datasets(self, lst_of_list_of_distributions: list[list[NkodDistribution]]) -> list[NkodDistribution]:
@@ -42,12 +41,11 @@ class NkodDatasetProcessor:
             if self.format_to_extension_distribution.get(our_distribution.format.replace(self.NKOD_FILE_FORMAT_PREFIX, "").lower(), "Unknown format") in self.rdf_file_formats:
                 processed_datasets.append(our_distribution)
             else:
-                raise NotImplementedError
+                raise ValueError("Non-rdf file detected!!!")
 
         return processed_datasets
 
     def filter_only_files(self, distributions: list[NkodDistribution]) -> list[NkodDistribution]:
-        # TODO: pozdeji pridat do sqlite tabulky
         filtered_distributions = []
 
         for distribution in distributions:

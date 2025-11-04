@@ -4,6 +4,7 @@ import streamlit as st
 st.set_page_config(
     page_title="NKOD LLM search",
     page_icon="📝",
+    layout="wide"
 )
 
 if 'config' not in st.session_state:
@@ -67,10 +68,6 @@ if st.session_state.loading:
         }
         </style>
     """, unsafe_allow_html=True)
-
-    #st.markdown("<style>main > div > :not([data-testid='stSidebar']) {display: none !important; visibility: hidden;}</style>", unsafe_allow_html=True)
-    #st.markdown("<div style='height: 60vh; width: 100vh; display: flex; align-items: center; justify-content: center;'><div>", unsafe_allow_html=True)
-    #col1, col2, col3 = st.columns([1, 2, 1])
 
     with st.spinner(st.session_state.loading_msg):
         if 'next_page' in st.session_state:

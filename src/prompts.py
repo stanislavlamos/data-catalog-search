@@ -5,6 +5,7 @@ language_detection_system = {
     "gpt-3o": "You are a helpful assistant, classify the input text as 'Czech', 'English', or 'Other'. If the text contains a mix of languages, select 'Other'. Return your answer as a single word. Do not take entities and concrete names into account, such as: cities, names, places, food etc..."
 }
 
+
 language_detection_user = {
     "gpt-5": """
     Here are some examples:
@@ -52,6 +53,7 @@ language_detection_user = {
     """
 }
 
+
 timeframe_detection_system = {
     "gpt-5": """
     Role: Build a helpful assistant to extract explicit timeframes from user queries.
@@ -73,6 +75,7 @@ timeframe_detection_system = {
 
     "gpt-3o": ""
 }
+
 
 timeframe_detection_user = {
     "gpt-5": """
@@ -270,6 +273,7 @@ nkod_graph_sparql_user = {
     ```
     Instructions:
     - Use only the node types and properties provided.
+    - Do not use EXISTS {{}} clauses.
     - Do not use any node types and properties that are not explicitly provided.
     - Include all necessary prefixes.
     - Note: Be as concise as possible.
@@ -301,10 +305,75 @@ nkod_graph_sparql_user = {
     \n
     
     Question: \n
-    {prompt}
+    {question}
     \n
     """
 }
+
+
+nkod_openai_files_system = {
+    "gpt-5": """
+    You are an expert in RDF, SPARQL query generation, and ontology modeling.
+    Given one or more RDF files and a natural language query, generate a valid SPARQL query.
+    """
+}
+
+
+nkod_openai_files_user = {
+    "gpt-5": """
+    Task
+    Generate a SPARQL SELECT statement for querying a graph database.
+    You are an expert in Semantic Web technologies, RDF, OWL ontologies, and SPARQL query generation. 
+    Use only classes and properties defined the attached files.
+    If some info in the user question are already included in the publisher name or name of the dataset, 
+    do not include them in the SPARQL query
+    Your task is to generate correct, efficient, and human-readable SPARQL query given:
+        (1) attached files, and 
+        (2) a natural language question.
+    
+    Example
+    For instance, to find all email addresses of John Doe, the following query in backticks would be suitable:
+    ```
+    PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+    SELECT ?email
+    WHERE {{
+        ?person foaf:name "John Doe" .
+        ?person foaf:mbox ?email .
+    }}
+    ```
+    Instructions:
+    - Use only the node types and properties provided.
+    - Do not use EXISTS {{}} clauses.
+    - Do not use any node types and properties that are not explicitly provided.
+    - Include all necessary prefixes.
+    - Note: Be as concise as possible.
+    - Do not include any explanations or apologies in your responses.
+    - Do not respond to any questions that ask for anything else than for you to construct a SPARQL query.
+    - Do not include any text except the SPARQL query generated.
+    - Use only classes and properties defined the attached files.
+    - There might be multiple attached files from multiple datasets, handle them appropriately and connect them using common properties.
+    - If some info or entity in the user's question are already included in the publisher name or name of the dataset, 
+    do not include them in the SPARQL query
+    
+    Generate the SPARQL query to answer the user's question. 
+    Be as concise as possible.
+
+    Publisher names: \n	
+    {publishers}
+    \n
+    
+    Names of the datasets: \n
+    {titles}
+    \n
+    
+    Question: \n
+    {question}
+    \n
+    """
+}
+
+
+
 
 
 

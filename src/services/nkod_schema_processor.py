@@ -5,6 +5,8 @@ import requests
 from urllib.parse import urljoin
 import ssl
 import json
+import subprocess
+from datetime import datetime
 
 
 ssl._create_default_https_context = ssl._create_unverified_context
@@ -35,15 +37,14 @@ class NkodSChemaProcessor:
             "xml": "xml"
         }
         self.nonrdf_file_formats_schema = ['csv', 'json', 'xml']
-        # TODO: what about XML files (are they RDF???)?
         self.rdf_file_formats = ['jsonld', 'ttl', 'trig', 'rdf', 'nq', 'nt']
         self.schema_and_distribution_preference = {
             "ttl": 0,
             "rdf": 1,
             "jsonld": 2,
             "trig": 3,
-            "nq": 4, # TODO: probrat
-            "nt": 5 # TODO: probrat
+            "nq": 4, 
+            "nt": 5
         }
 
     def process_schemas(self, lst_of_list_of_distributions: list[list[NkodDistribution]]) -> tuple[list[list[tuple[str, str]]], list[NkodDistribution]]:
@@ -64,9 +65,6 @@ class NkodSChemaProcessor:
                 elif schema_format in self.rdf_file_formats:
                     processed_schemas_all.append([(schema_format, requests.get(our_distribution.conformsTo).text)])
 
-                elif schema_format == "zip":
-                    raise NotImplementedError
-
                 else: # schema_format in self.nonrdf_file_formats_schema
                     schema_data = None
 
@@ -77,10 +75,10 @@ class NkodSChemaProcessor:
 
                     processed_schemas_all.append([(schema_format, schema_data)])
 
-            else: # schema_format is None
-                raise NotImplementedError
-                #processed_schemas.append((schema_format, requests.get(our_schema.conformsTo).text))
-
+            else:
+                schema_path = self.generate_shacl(our_distribution)
+                processed_schemas_all.append([("ttl", open(schema_path, "r", encoding="utf-8").read())])
+                
         return processed_schemas_all, selected_distributions
 
     def select_best_distribution(self, distributions: list[NkodDistribution]) -> NkodDistribution:
@@ -94,11 +92,7 @@ class NkodSChemaProcessor:
 
         return sorted(distributions, key=score)[0]
 
-    def process_zip_file(self):
-        raise NotImplementedError
-
     def filter_only_files(self, distributions: list[NkodDistribution]) -> list[NkodDistribution]:
-        # TODO: pozdeji pridat do sqlite tabulky
         filtered_distributions = []
 
         for distribution in distributions:
@@ -158,6 +152,40 @@ class NkodSChemaProcessor:
 
         return False
 
-    def generate_shacl(self):
-        # Generating SHACL shapes from https://shacl-play.sparna.fr/play/generate
-        raise NotImplementedError
+    def generate_shacl(self, distribution: NkodDistribution) -> str:
+        input_file_str = requests.get(distribution.downloadURL).text
+        input_file_extension = self.get_distribution_format(distribution)
+
+        if input_file_extension is None:
+            raise ValueError("Cannot determine distribution file format for SHACL generation.")
+
+        now = datetime.now()
+        input_filename = f"input_{now.strftime('%Y-%m-%d_%H-%M-%S')}.{input_file_extension}"
+        output_filename = f"output_{now.strftime('%Y-%m-%d_%H-%M-%S')}_shacl.ttl"
+
+        if input_file_extension == "jsonld":
+            data = json.loads(input_file_str)
+
+            with open(os.path.join(self.tmp_folder_path, input_filename), "w", encoding="utf-8") as f:
+                json.dump(data, f, ensure_ascii=False, indent=4)
+
+        else:
+            with open(os.path.join(self.tmp_folder_path, input_filename), "w", encoding="utf-8") as f:
+                f.write(input_file_str)
+                
+        _ = subprocess.run(
+            ["shaclgen", os.path.join(self.tmp_folder_path, input_filename), "--output", os.path.join(self.tmp_folder_path, output_filename)],
+            check=True,
+            capture_output=True,
+            text=True
+        )
+
+        return os.path.join(self.tmp_folder_path, output_filename)
+    
+    def get_distribution_format(self, distribution: NkodDistribution) -> str | None:
+        if distribution.format.startswith(self.NKOD_FILE_FORMAT_PREFIX):
+            format_key = distribution.format.replace(self.NKOD_FILE_FORMAT_PREFIX, "")
+            file_extension = self.format_to_extension_distribution.get(format_key.lower(), None)
+            return file_extension
+
+        return None

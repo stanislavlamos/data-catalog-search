@@ -1,4 +1,6 @@
 import streamlit as st
+from src.fe_handler import get_query_matching_datasets
+
 
 if 'loading' not in st.session_state:
     st.session_state.loading = False
@@ -46,4 +48,11 @@ else:
             st.session_state.loading = True
             st.session_state.next_page = 'query_matching'
             st.session_state.loading_msg = "Matching query..."
+            st.session_state.fnc_to_call = get_query_matching_datasets
+            st.session_state.params_for_fnc = {
+                "query": st.session_state.config.get('query'),
+                "model_name": st.session_state.config.get('model_name'),
+                "llm_provider": st.session_state.config.get('llm_provider'),
+                "language": st.session_state.selected_language
+            }
             st.rerun()

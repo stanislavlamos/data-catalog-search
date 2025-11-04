@@ -30,26 +30,48 @@ class NkodQueryMatcherPipeline:
         self.nkod_query_matcher = NkodQueryMatcher(self.query)
         self.nkod_query_reranker = NkodQueryMatcherReranker()
 
-        self._run_query_matching_parallel()
+        matched_titles, matched_descs, matched_keywords = self._run_query_matching_parallel()
+        reranked_matched_titles, reranked_matched_descs, reranked_matched_keywords = self._run_reranking_parallel(matched_titles, matched_descs, matched_keywords)
 
-        return NkodQueryMatcherResponse(text="konec")
+        return NkodQueryMatcherResponse(
+            matched_titles=reranked_matched_titles,
+            matched_descriptions=reranked_matched_descs,
+            matched_keywords=reranked_matched_keywords
+        )
 
-    def _run_query_matching_parallel(self):
+    def _run_query_matching_parallel(self) -> tuple[list[dict], list[dict], list[dict]]:
         tasks = [
-            ("matching_titles", self.nkod_query_matcher.get_matching_titles, (self.k, self.chroma_db, self.nkod_data_processor, self.language, self.embedding_provider, True)),
-            ("matching_descs", self.nkod_query_matcher.get_matching_descriptions, (self.k, self.chroma_db, self.nkod_data_processor, self.language, self.embedding_provider, True)),
-            ("matching_keywords", self.nkod_query_matcher.get_matching_keywords, (self.k, self.chroma_db, self.nkod_data_processor, self.language, self.embedding_provider, True)),
+            ("matching_titles", self.nkod_query_matcher.get_matching_titles, (self.k, self.chroma_db, self.nkod_data_processor, self.language, self.embedding_provider)),
+            ("matching_descs", self.nkod_query_matcher.get_matching_descriptions, (self.k, self.chroma_db, self.nkod_data_processor, self.language, self.embedding_provider)),
+            ("matching_keywords", self.nkod_query_matcher.get_matching_keywords, (self.k, self.chroma_db, self.nkod_data_processor, self.language, self.embedding_provider)),
         ]
         num_workers = len(tasks)
+        res = {}
+
+        with ThreadPoolExecutor(max_workers=num_workers) as executor:
+            future_to_name = {executor.submit(fn, *args): fn_name  for fn_name, fn, args in tasks}
+            for future in as_completed(future_to_name):
+                name = future_to_name[future]
+                result = future.result()
+                res[name] = result
+        
+        return res["matching_titles"], res["matching_descs"], res["matching_keywords"]
+
+    def _run_reranking_parallel(self, matched_titles: list[dict], matched_descs: list[dict], matched_keywords: list[dict]) -> tuple[list[dict], list[dict], list[dict]]:
+        tasks = [
+            ("reranked_matching_titles", self.nkod_query_reranker.rerank_query_results, (self.query, matched_titles, self.llm_provider)),
+            ("reranked__descs", self.nkod_query_reranker.rerank_query_results, (self.query, matched_descs, self.llm_provider)),
+            ("reranked__keywords", self.nkod_query_reranker.rerank_query_results, (self.query, matched_keywords, self.llm_provider)),
+        ]
+        num_workers = len(tasks)
+        res = {}
 
         with ThreadPoolExecutor(max_workers=num_workers) as executor:
             future_to_name = {executor.submit(fn, *args): fn_name for fn_name, fn, args in tasks}
             for future in as_completed(future_to_name):
                 name = future_to_name[future]
                 result = future.result()
-                print(f"{name} -> {result}")
+                res[name] = result
 
-        print("All tasks completed.")
+        return res["reranked_matching_titles"], res["reranked__descs"], res["reranked__keywords"]
 
-    def _run_reranking_parallel(self):
-        pass

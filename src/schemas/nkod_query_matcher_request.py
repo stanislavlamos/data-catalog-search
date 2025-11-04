@@ -6,4 +6,4 @@ class NkodQueryMatcherRequest(BaseModel):
     llm_provider: str
     model_name: str
     language: str
-    embedding_provider: str
+    embedding_provider: str = "openai"

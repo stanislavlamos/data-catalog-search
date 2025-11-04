@@ -2,6 +2,8 @@ import requests
 import os
 import csv
 import math
+import pandas as pd
+from tqdm import tqdm
 from ..db.chroma_db import ChromaDb
 from ..db.graph_db import GraphDb
 from ..db.sq_lite import SqLite
@@ -9,7 +11,7 @@ from ..models.base import BaseEmbeddingProvider
 from ..schemas.schemas import NkodDistribution
 from ..sparql_queries import get_catalogs_metadata_and_themes_nkod_remote, \
     get_all_dcat_themes_nkod_remote, get_dataset_distributions_nkod_remote, get_dataset_publisher_nkod_remote, \
-    get_publisher_by_dataset_nkod_remote
+    get_publisher_by_dataset_nkod_remote, get_all_distributions_and_formats_nkod_remote
 from src.services.base_data_processor import BaseDataProcessor
 from ..sql_queries import get_keywords_czech_nkod, get_keywords_english_nkod, get_descriptions_czech_nkod, \
     get_descriptions_english_nkod, get_titles_english_nkod, get_titles_czech_nkod, get_themes_labels_english_nkod, \
@@ -18,20 +20,22 @@ from ..sql_queries import get_keywords_czech_nkod, get_keywords_english_nkod, ge
 from ..utils import split_keywords_sql_output, print_keywords_stats, \
     print_titles_stats, print_descs_stats, prepare_nkod_keywords_for_chromadb, batch_list, \
     split_themes_sql_output, prepare_nkod_themes_properties_for_chromadb, \
-    split_descs_sql_output, split_titles_sql_output, prepare_nkod_descs_for_chromadb, prepare_nkod_titles_for_chromadb
+    split_descs_sql_output, split_titles_sql_output, prepare_nkod_descs_for_chromadb, prepare_nkod_titles_for_chromadb, intersect_dataframes
 
 
 class NkodDataProcessor(BaseDataProcessor):
 
     METADATA_URL = "https://data.gov.cz/soubor/nkod.trig"
     DISTRIBUTIONS_URL = "https://data.gov.cz/soubor/distribuce.csv"
+    DATASETS_URL = "https://data.gov.cz/soubor/datové-sady.csv"
     NKOD_ENDPOINT = "https://data.gov.cz/sparql"
     BATCH_SIZE = 40000
     URIS_TO_SKIP = "https://data.gov.cz/zdroj/podněty-na-data-k-otevření/"
     DCAT_THEMES_URL = "http://publications.europa.eu/resource/authority/data-theme"
+    NKOD_FILE_FORMAT_PREFIX = "http://publications.europa.eu/resource/authority/file-type/"
 
-    def __init__(self, catalog_name: str, metadata_fname: str = "nkod_metadata.trig", distributions_fname: str = "nkod_distributions.csv"):
-        super().__init__(catalog_name, metadata_fname, distributions_fname)
+    def __init__(self, catalog_name: str, metadata_fname: str = "nkod_metadata.trig", distributions_fname: str = "nkod_distributions.csv", datasets_fname: str = "nkod_datasets.csv"):
+        super().__init__(catalog_name, metadata_fname, distributions_fname, datasets_fname)
         
         self.metadata_csv_path = os.path.join(self.data_path, "nkod_metadata.csv")
         self.metadata_sql_table_name = "nkod_metadata"
@@ -52,7 +56,8 @@ class NkodDataProcessor(BaseDataProcessor):
             "description_en",
             "keywords_cs",
             "keywords_en",
-            "themes"
+            "themes",
+            "has_rdf_distribution"
         ]
         self.sql_columns_themes = [
             "theme_name",
@@ -78,6 +83,21 @@ class NkodDataProcessor(BaseDataProcessor):
             'specifikaceSlužby'
         ]
 
+        self.format_to_extension_distribution = {
+            "json-ld": "jsonld",
+            "json_ld": "jsonld",
+            "rdf_n_triples": "nt",
+            "rdf_turtle": "ttl",
+            "rdf_n_quads": "nq",
+            "rdf_trig": "trig",
+            "csv": "csv",
+            "zip": "zip",
+            "rdf_xml": "rdf",
+            "json": "json",
+            "xml": "xml"
+        }
+        self.rdf_file_formats = ['jsonld', 'ttl', 'trig', 'rdf', 'nq', 'nt']
+
         self.vectordb_path = self.data_path
         self.keywords_collection_name = "nkod_keywords"
         self.descriptions_collection_name = "nkod_descriptions"
@@ -102,6 +122,15 @@ class NkodDataProcessor(BaseDataProcessor):
             f.write(response.content)
 
         print(f"Distributions file downloaded as {self.distributions_path}")
+    
+    def download_catalog_datasets(self):
+        response = requests.get(self.DATASETS_URL)
+        response.raise_for_status()
+
+        with open(self.datasets_path, "wb") as f:
+            f.write(response.content)
+
+        print(f"Datasets file downloaded as {self.distributions_path}")
 
     def _index_keywords(self, sq_lite: SqLite, embedding_provider: BaseEmbeddingProvider, chroma_db: ChromaDb, language: str = "cs", verbose: bool = False) -> None:
         if language == "cs":
@@ -264,6 +293,10 @@ class NkodDataProcessor(BaseDataProcessor):
                     ";_; ".join(sorted(vals["themes"])),
                 ])
 
+        aligned_metadata_df = self.align_metadata_with_nkod()
+        print(aligned_metadata_df.columns)
+        aligned_metadata_df_with_rdf_distribution = self.check_metadata_for_rdf_distributions(graph_db, aligned_metadata_df)
+        aligned_metadata_df_with_rdf_distribution.to_csv(self.metadata_csv_path, index=False)
         print(f"Created metadata CSV file at {self.metadata_csv_path}")
 
     def create_themes_csv(self, graph_db: GraphDb) -> None:
@@ -358,3 +391,72 @@ class NkodDataProcessor(BaseDataProcessor):
         result = sq_lite.query_data(sql_query, {"dataset_uri": dataset_uri, "table_name": self.metadata_sql_table_name})
 
         return result[0][0]
+
+    def dataset_uri_has_rdf_distribution(self, dataset_uri: str, distributions_and_formats_df: pd.DataFrame) -> bool:
+        dataset_distributions = distributions_and_formats_df[distributions_and_formats_df["dataset_uri"] == dataset_uri]
+
+        for format_uri in dataset_distributions["format"]:
+            if format_uri is None:
+                continue
+
+            if format_uri.startswith(self.NKOD_FILE_FORMAT_PREFIX):
+                format_key = format_uri.replace(self.NKOD_FILE_FORMAT_PREFIX, "")
+                file_extension = self.format_to_extension_distribution.get(format_key.lower(), None)
+                
+                if file_extension in self.rdf_file_formats:
+                    return True
+        
+        return False
+
+    def check_metadata_for_rdf_distributions(self, graph_db: GraphDb, aligned_metadata_df: pd.DataFrame) -> pd.DataFrame:
+        distributions_and_formats_df = self.get_all_distributions_and_formats(graph_db)
+        aligned_distributions_and_formats_df = intersect_dataframes(distributions_and_formats_df, aligned_metadata_df, left_on="dataset_uri", right_on="dataset_uri") 
+        has_rdf_distribution_lst = []
+        processed_datasets = []
+
+        for dataset_uri in tqdm(
+            aligned_distributions_and_formats_df["dataset_uri"],
+            desc="Checking RDF distributions",
+            total=len(aligned_distributions_and_formats_df),
+            unit="dataset"
+        ):
+            if dataset_uri not in processed_datasets:
+                has_rdf_distribution = self.dataset_uri_has_rdf_distribution(dataset_uri, distributions_and_formats_df)
+                has_rdf_distribution_lst.append({
+                    "dataset_uri": dataset_uri,
+                    "has_rdf_distribution": has_rdf_distribution
+                })
+                processed_datasets.append(dataset_uri)
+
+        rdf_df = pd.DataFrame(has_rdf_distribution_lst)
+        aligned_metadata_df = aligned_metadata_df.merge(rdf_df, on="dataset_uri", how="left")
+
+        return aligned_metadata_df
+
+    def align_metadata_with_nkod(self) -> pd.DataFrame:
+        nkod_datasets_df = pd.DataFrame(pd.read_csv(self.datasets_path)["datová_sada"].unique(), columns=["datová_sada"])
+        nkod_distributions_df = pd.DataFrame(pd.read_csv(self.distributions_path)["datová_sada"].unique(), columns=["datová_sada"])
+        my_metadata_df = pd.read_csv(self.metadata_csv_path)
+        aligned_metadata_df = intersect_dataframes(my_metadata_df, nkod_datasets_df, left_on="dataset_uri", right_on="datová_sada")
+        aligned_metadata_df = intersect_dataframes(aligned_metadata_df, nkod_distributions_df, left_on="dataset_uri", right_on="datová_sada")
+        
+        columns_to_drop = ['has_rdf_distribution', 'datová_sada_x', 'datová_sada_y']
+        aligned_metadata_df = aligned_metadata_df.drop(columns=columns_to_drop, errors='ignore')
+
+        
+        return aligned_metadata_df
+
+    def get_all_distributions_and_formats(self, graph_db: GraphDb) -> pd.DataFrame:
+        sparql_results = graph_db.query_sparql_remote(get_all_distributions_and_formats_nkod_remote, self.NKOD_ENDPOINT)
+
+        data = [
+            {
+                'dataset_uri': binding['dataset']['value'],
+                'distribution_uri': binding.get('distribution', {}).get('value', None),
+                'format': binding.get('format', {}).get('value', None)
+            }
+            for binding in sparql_results['results']['bindings']
+        ]
+
+        return pd.DataFrame(data)
+    

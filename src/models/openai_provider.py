@@ -12,7 +12,7 @@ class OpenAILLMProvider(BaseLLMProvider):
         self.temperature = temperature
         self.model_name = model_name
 
-    def chat(self, user_prompt: str, system_prompt: str, user_prompt_vars: dict | None = None, system_prompt_vars: dict | None = None, structured_output: BaseModel | None = None) -> str | BaseModel:
+    def chat(self, user_prompt: str, system_prompt: str, user_prompt_vars: dict | None = None, system_prompt_vars: dict | None = None, structured_output: BaseModel | None = None, file_ids: list[str] | None = None) -> str | BaseModel:
         llm = ChatOpenAI(model=self.model_name, temperature=self.temperature)
 
         if structured_output is not None:
@@ -20,13 +20,19 @@ class OpenAILLMProvider(BaseLLMProvider):
 
         user_prompt = user_prompt.format(**(user_prompt_vars or {}))
         system_prompt = system_prompt.format(**(system_prompt_vars or {}))
+
+        if file_ids is not None:
+            human_message_content = [
+                {"type": "text", "text": user_prompt},
+                *[{"type": "file", "file_id": fid} for fid in file_ids]
+            ]
+        else:
+            human_message_content = user_prompt
+
         messages = [
             SystemMessage(content=system_prompt),
-            HumanMessage(content=user_prompt)
+            HumanMessage(content=human_message_content)
         ]
-
-        print(user_prompt)
-
         response = llm.invoke(messages)
 
         return response
@@ -42,3 +48,4 @@ class OpenAIEmbeddingProvider(BaseEmbeddingProvider):
 
     def embed_query(self, text: str) -> List[float]:
         return self.embeddings.embed_query(text)
+    

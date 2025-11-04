@@ -2,4 +2,6 @@ from pydantic import BaseModel
 
 
 class NkodQueryMatcherResponse(BaseModel):
-    text: str
+    matched_titles: list[dict]
+    matched_descriptions: list[dict]
+    matched_keywords: list[dict]

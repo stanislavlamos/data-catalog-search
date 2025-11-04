@@ -16,4 +16,3 @@
 {"desc": "mimo NKOD", "query": "Jaké události se konají v Berlíně?", "language": "cs", "timeframe": "None", "dataset_uris": []}
 {"desc": "mimo NKOD", "query": "Jaké jsou turistické cíle v Londýně?", "language": "cs", "timeframe": "None", "dataset_uris": []}
 {"desc": "jednoduchý dotaz (timeoutuje)", "query": "Kolik je pracovišť na MFF UK?", "language": "cs", "timeframe": "None", "dataset_uris": ["https://data.gov.cz/zdroj/datové-sady/00216208/cebf155a0b6cc8d439c960145f1601a6"]}
-
