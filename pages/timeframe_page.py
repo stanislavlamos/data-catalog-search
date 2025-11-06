@@ -1,5 +1,5 @@
 import streamlit as st
-from src.fe_handler import get_query_matching_datasets
+from src.fe_handler import query_matching_content
 
 
 if 'loading' not in st.session_state:
@@ -16,7 +16,6 @@ timeframe_to_print = {
     "custom": "Custom",
 }
 
-print(st.session_state)
 detected_timeframe = st.session_state.result.get('result')
 st.write(f"**Detected Timeframe:** {st.session_state.result['start_date']} -> {st.session_state.result['end_date']}")
 st.markdown("---")
@@ -48,7 +47,7 @@ else:
             st.session_state.loading = True
             st.session_state.next_page = 'query_matching'
             st.session_state.loading_msg = "Matching query..."
-            st.session_state.fnc_to_call = get_query_matching_datasets
+            st.session_state.fnc_to_call = query_matching_content
             st.session_state.params_for_fnc = {
                 "query": st.session_state.config.get('query'),
                 "model_name": st.session_state.config.get('model_name'),

@@ -200,6 +200,7 @@ nkod_rag_user = {
     Requirements:
     - Parse and interpret the provided schema(s), respecting prefixes and namespaces.
     - Use only classes and properties defined the schema(s).
+    - Do not use EXISTS {{}} clauses.
     - Produce a syntactically valid and semantically consistent SPARQL query.
     - Output only the query in a markdown code block (sparql), nothing else.
     - Do not make assumptions beyond the provided schema.

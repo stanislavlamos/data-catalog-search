@@ -45,7 +45,7 @@ class NkodSparqlGenerationEvaluator:
     def evaluate_on_ofn_dataset_nkod_graph_sparql(self, ofn_dataset_fname: str, nkod_graph_sparql: NkodGraphSparql, nkod_data_processor: NkodDataProcessor, llm_provider: BaseLLMProvider, model_name: str,  graph_db: GraphDb, sq_lite: SqLite, language: str = "cs"):
         ofn_samples = load_jsonl_to_list(os.path.join(self.data_path, ofn_dataset_fname))
 
-        for idx, ofn_sample in enumerate([ofn_samples[2]]):
+        for idx, ofn_sample in enumerate([ofn_samples[10]]):
             query = ofn_sample['query']
             print(f"Sample #{idx + 1}/{len(ofn_samples)}")
             print(f"Query: {query}")
@@ -67,7 +67,7 @@ class NkodSparqlGenerationEvaluator:
     def evaluate_on_ofn_dataset_nkod_openai_files(self, ofn_dataset_fname: str, nkod_graph_sparql: NkodOpenAiFiles, nkod_data_processor: NkodDataProcessor, llm_provider: BaseLLMProvider, model_name: str,  graph_db: GraphDb, sq_lite: SqLite, language: str = "cs"):
         ofn_samples = load_jsonl_to_list(os.path.join(self.data_path, ofn_dataset_fname))
 
-        for idx, ofn_sample in enumerate([ofn_samples[2]]):
+        for idx, ofn_sample in enumerate([ofn_samples[4]]):
             query = ofn_sample['query']
             print(f"Sample #{idx + 1}/{len(ofn_samples)}")
             print(f"Query: {query}")

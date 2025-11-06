@@ -1,5 +1,8 @@
 from src.schemas.schemas import NkodDistribution
 from rdflib import Graph, Dataset, URIRef
+import requests
+import rdflib.plugins.shared.jsonld.context as jsonld_context
+import json
 
 
 class NkodRdfGraph:
@@ -28,7 +31,8 @@ class NkodRdfGraph:
     def _create_simple_graph(self, distributions: list[NkodDistribution]) -> Graph:
         g = Graph()
         graph_format = distributions[0].format.lower().replace(self.NKOD_FILE_FORMAT_PREFIX, "")
-        g.parse(distributions[0].downloadURL, format=self.distribution_format_to_rdf_format[graph_format])
+        distribution_str = NkodRdfGraph.download_distribution(distributions[0])
+        g.parse(data=distribution_str, format=self.distribution_format_to_rdf_format[graph_format])
 
         return g
 
@@ -38,15 +42,14 @@ class NkodRdfGraph:
         for idx, distribution in enumerate(distributions):
             identifier = URIRef(f"{self.GRAPH_IRI}/g{idx+1}")
             g = Graph(identifier=identifier)
+            distribution_str = NkodRdfGraph.download_distribution(distribution)
             graph_format = distribution.format.lower().replace(self.NKOD_FILE_FORMAT_PREFIX, "")
-            g.parse(distribution.downloadURL, format=self.distribution_format_to_rdf_format[graph_format])
+            g.parse(data=distribution_str, format=self.distribution_format_to_rdf_format[graph_format])
             ds.add_graph(g)
 
         return ds
 
     def query_graph(self, query) -> list:
-        print(f"Executing SPARQL query:\n{query}\n")
-        print(self.graph)
         return list(self.graph.query(query))
 
     @staticmethod
@@ -64,7 +67,28 @@ class NkodRdfGraph:
 
         g = Graph()
         graph_format = distribution.format.lower().replace(NKOD_FILE_FORMAT_PREFIX, "")
-        print(distribution.downloadURL)
-        g.parse(distribution.downloadURL, format=distribution_format_to_rdf_format[graph_format])
+        distribution_str = NkodRdfGraph.download_distribution(distribution)
+        g.parse(data=distribution_str, format=distribution_format_to_rdf_format[graph_format])
 
         return g
+    
+    @staticmethod
+    def download_distribution(distribution: NkodDistribution) -> str:
+        response = requests.get(distribution.downloadURL)
+        response.raise_for_status()
+        distribution_format_to_rdf_format = {
+            "json-ld": "json-ld",
+            "json_ld": "json-ld",
+            "rdf_n_triples": "nt",
+            "rdf_turtle": "ttl",
+            "rdf_n_quads": "nq",
+            "rdf_trig": "trig",
+            "rdf_xml": "rdf"
+        }
+        NKOD_FILE_FORMAT_PREFIX = "http://publications.europa.eu/resource/authority/file-type/"
+
+        graph_format = distribution.format.lower().replace(NKOD_FILE_FORMAT_PREFIX, "")
+        if distribution_format_to_rdf_format[graph_format] == "json-ld":
+            return json.dumps(json.loads(response.text))
+
+        return response.text

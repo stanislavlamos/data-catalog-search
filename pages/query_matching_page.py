@@ -1,33 +1,22 @@
 import streamlit as st
 from src.data_service import get_mock_datasets
+from src.fe_handler import get_query_matching_datasets
 
 
 st.title("🔍 Query Matching")
 st.markdown("Select relevant datasets that match your query criteria")
 st.markdown("---")
 
-all_datasets = get_mock_datasets()
 
-matched_by_title = [ds for ds in all_datasets if
-                    'transport' in ds['title'].lower() or
-                    'quality' in ds['title'].lower() or
-                    'weather' in ds['title'].lower()]
-
-matched_by_desc = [ds for ds in all_datasets if
-                   ds not in matched_by_title and (
-                   'data' in ds['description'].lower() or
-                   'information' in ds['description'].lower() or
-                   'records' in ds['description'].lower())]
-
-matched_by_keywords = [ds for ds in all_datasets if
-                       ds not in matched_by_title and
-                       ds not in matched_by_desc and
-                       any(tag in ['environment', 'monitoring', 'municipal'] for tag in ds['tags'])]
+matched_by_title = st.session_state.result[0]["matched_titles"]
+matched_by_desc = st.session_state.result[0]["matched_descriptions"]
+matched_by_keywords = st.session_state.result[0]["matched_keywords"]
+all_datasets = st.session_state.result[1]["all_datasets"]   
 
 if "selected_datasets" not in st.session_state:
     st.session_state.selected_datasets = []
 
-selected_ids = [ds['id'] for ds in st.session_state.selected_datasets]
+selected_ids = [ds['dataset_uri'] for ds in st.session_state.selected_datasets]
 
 st.markdown("""
 <style>
@@ -81,50 +70,47 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 
-# Added helper to filter datasets by query (title, description, tags)
-def filter_datasets(datasets, query: str):
-    q = (query or "").strip().lower()
-    if not q:
-        return datasets
-    out = []
-    for ds in datasets:
-        if q in ds.get('title', '').lower():
-            out.append(ds)
-            continue
-        if q in ds.get('description', '').lower():
-            out.append(ds)
-            continue
-        # match tags (any tag contains query)
-        if any(q in tag.lower() for tag in ds.get('tags', [])):
-            out.append(ds)
-            continue
-        # match source
-        if q in ds.get('source', '').lower():
-            out.append(ds)
-            continue
-    return out
-
-
 def render_dataset_card(ds, match_type, idx, parent=None):
-    is_selected = ds['id'] in selected_ids
+    is_selected = ds['dataset_uri'] in selected_ids
     btn_label = "✕" if is_selected else "➕"
     btn_help = "Remove from selection" if is_selected else "Add to selection"
-    btn_key = f"{match_type}_{ds['id']}_{idx}"
+    btn_key = f"{match_type}_{ds['dataset_uri']}_{idx}"
 
     card_class = "dataset-card selected" if is_selected else "dataset-card"
     container_ctx = parent if parent is not None else st.container(border=True)
     with container_ctx:
         header_cols = st.columns([10, 1])
         with header_cols[0]:
-            st.markdown(f"<p class='dataset-title'>{ds['title']}</p>", unsafe_allow_html=True)
+            st.markdown(f"<p class='dataset-title'>{ds['dataset_title']}</p>", unsafe_allow_html=True)
         with header_cols[1]:
             if st.button(btn_label, key=btn_key, help=btn_help, type="secondary", use_container_width=False):
                 if is_selected:
-                    st.session_state.selected_datasets = [d for d in st.session_state.selected_datasets if d['id'] != ds['id']]
+                    st.session_state.selected_datasets = [d for d in st.session_state.selected_datasets if d['dataset_uri'] != ds['dataset_uri']]
                 else:
                     st.session_state.selected_datasets.append(ds)
                 st.rerun()
-        st.markdown(f"<p class='dataset-meta'>{ds['source']} • {int(ds['relevance_score'] * 100)}%</p>", unsafe_allow_html=True)
+        st.markdown(f"<p class='dataset-meta'><a href={ds['dataset_uri']}>{ds['dataset_uri']}</a></p>", unsafe_allow_html=True)
+        has_rdf_distribution = ds.get('has_rdf_distribution', False)
+        if has_rdf_distribution:
+            st.markdown(f"<p class='dataset-meta' style='color: green;'>RDF distribution available</p>", unsafe_allow_html=True)
+        else:
+            st.markdown(f"<p class='dataset-meta' style='color: red;'>No RDF distribution available</p>", unsafe_allow_html=True)
+
+
+# Added helper to filter datasets by query (title, description, tags)
+def filter_datasets(datasets, query: str):
+    q = (query or "").strip().lower()
+    
+    if not q:
+        return []
+    
+    out = []
+    for ds in datasets:
+        if q in ds.get('dataset_title', '').lower():
+            out.append(ds)
+            continue
+
+    return out
 
 
 # Integrate search bar and selectable available datasets
@@ -144,10 +130,8 @@ if is_enabled:
     st.markdown("---")
 
     filtered_datasets = filter_datasets(all_datasets, search_query)
-
-    # recompute selected ids to ensure up-to-date
-    selected_ids = [ds['id'] for ds in st.session_state.selected_datasets]
-    available_datasets = [ds for ds in filtered_datasets if ds['id'] not in selected_ids]
+    selected_ids = [ds['dataset_uri'] for ds in st.session_state.selected_datasets]
+    available_datasets = [ds for ds in filtered_datasets if ds['dataset_uri'] not in selected_ids]
 
     st.markdown(""" 
     <style>
@@ -255,29 +239,6 @@ if is_enabled:
                 # Use the shared renderer so look & behavior are consistent with other lists
                 render_dataset_card(dataset, "search", idx)
 
-
-def render_dataset_card(ds, match_type, idx, parent=None):
-    is_selected = ds['id'] in selected_ids
-    btn_label = "✕" if is_selected else "➕"
-    btn_help = "Remove from selection" if is_selected else "Add to selection"
-    btn_key = f"{match_type}_{ds['id']}_{idx}"
-
-    card_class = "dataset-card selected" if is_selected else "dataset-card"
-    container_ctx = parent if parent is not None else st.container(border=True)
-    with container_ctx:
-        header_cols = st.columns([10, 1])
-        with header_cols[0]:
-            st.markdown(f"<p class='dataset-title'>{ds['title']}</p>", unsafe_allow_html=True)
-        with header_cols[1]:
-            if st.button(btn_label, key=btn_key, help=btn_help, type="secondary", use_container_width=False):
-                if is_selected:
-                    st.session_state.selected_datasets = [d for d in st.session_state.selected_datasets if d['id'] != ds['id']]
-                else:
-                    st.session_state.selected_datasets.append(ds)
-                st.rerun()
-        st.markdown(f"<p class='dataset-meta'>{ds['source']} • {int(ds['relevance_score'] * 100)}%</p>", unsafe_allow_html=True)
-
-
 st.markdown(f"### Selected Datasets ({len(st.session_state.selected_datasets)})")
 with st.container(height=200, border=True):
     if not st.session_state.selected_datasets:
@@ -317,7 +278,13 @@ st.markdown("---")
 
 col_back, col_next = st.columns([1, 1])
 with col_back:
-    st.button("← Back", use_container_width=True)
+    if st.button("← Back", use_container_width=True):
+        st.session_state.loading = False
+        st.session_state.current_page = 'timeframe'
+        st.rerun()
 
 with col_next:
-    st.button("Next →", use_container_width=True, type="primary", disabled=len(st.session_state.selected_datasets) == 0)
+    if st.button("Next →", use_container_width=True, type="primary"):
+        st.session_state.loading = False
+        st.session_state.current_page = 'query_matching_recap'
+        st.rerun()

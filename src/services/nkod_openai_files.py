@@ -42,7 +42,7 @@ class NkodOpenAiFiles:
             user_prompt=nkod_openai_files_user[model_name],
             system_prompt=nkod_openai_files_system[model_name],
             user_prompt_vars={
-                "user_question": user_query,
+                "question": user_query,
                 "publishers": publishers_str,
                 "titles": titles_str
             }

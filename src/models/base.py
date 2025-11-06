@@ -7,7 +7,7 @@ class BaseLLMProvider(ABC):
     """Abstract base class for LLM providers"""
 
     @abstractmethod
-    def chat(self, user_prompt: str, system_prompt: str, user_prompt_vars: dict | None = None, system_prompt_vars: dict | None = None, structured_output: BaseModel | None = None) -> str | BaseModel:
+    def chat(self, user_prompt: str, system_prompt: str, user_prompt_vars: dict | None = None, system_prompt_vars: dict | None = None, structured_output: BaseModel | None = None, file_ids: list[str] | None = None) -> str | BaseModel:
         """Chat interface for conversational models"""
         pass
 

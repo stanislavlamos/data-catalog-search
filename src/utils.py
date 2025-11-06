@@ -245,7 +245,6 @@ def split_dataset_creation_sql_output(sql_output: list, language: str) -> list[d
     return split_output
 
 def parse_chroma_output(query_result: dict[str, list[list[dict]]]) -> list[dict]:
-    print("query_result:", query_result)
     docs = query_result["documents"][0]
     metadatas = query_result["metadatas"][0]
     scores = query_result["distances"][0]

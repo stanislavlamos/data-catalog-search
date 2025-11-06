@@ -35,6 +35,7 @@ pages = {
     'timeframe': st.Page("pages/timeframe_page.py", title="Timeframe Detection", icon="⚙️"),
     'query_matching': st.Page("pages/query_matching_page.py", title="Query Matching", icon="📋"),
     'query_matching_recap': st.Page("pages/query_matching_recap_page.py", title="Query Matching Recap", icon="📊"),
+    'sparql_generation': st.Page("pages/sparql_generation_page.py", title="SPARQL Query Generation", icon="🔧")
 }
 
 with st.sidebar:

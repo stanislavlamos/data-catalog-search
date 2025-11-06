@@ -294,7 +294,6 @@ class NkodDataProcessor(BaseDataProcessor):
                 ])
 
         aligned_metadata_df = self.align_metadata_with_nkod()
-        print(aligned_metadata_df.columns)
         aligned_metadata_df_with_rdf_distribution = self.check_metadata_for_rdf_distributions(graph_db, aligned_metadata_df)
         aligned_metadata_df_with_rdf_distribution.to_csv(self.metadata_csv_path, index=False)
         print(f"Created metadata CSV file at {self.metadata_csv_path}")

@@ -35,7 +35,6 @@ class GraphDb:
         with open(file_path, "rb") as f:
             data = f.read()
 
-        # HTTP POST request na GraphDB
         headers = {
             "Content-Type": "application/x-trig",
             'Accept': 'application/json'

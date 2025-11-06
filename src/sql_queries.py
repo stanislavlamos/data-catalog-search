@@ -53,3 +53,7 @@ get_titles_from_uri_czech_nkod = """
 get_titles_from_uri_english_nkod = """
     SELECT title_en FROM {table_name} WHERE dataset_uri = '{dataset_uri}'
 """
+
+get_all_datasets_nkod = """
+    SELECT dataset_uri, title_cs, has_rdf_distribution FROM {table_name}
+"""
