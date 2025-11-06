@@ -31,12 +31,27 @@ class NkodOpenAiFiles:
         self.data_path = os.path.join(project_dir, self.DATA_DIR, self.catalog_name)
         self.tmp_folder_path = os.path.join(self.data_path, "tmp")
 
+        self.format_to_extension_distribution = {
+            "json-ld": "jsonld",
+            "json_ld": "jsonld",
+            "rdf_n_triples": "nt",
+            "rdf_turtle": "ttl",
+            "rdf_n_quads": "nq",
+            "rdf_trig": "trig",
+            "csv": "csv",
+            "zip": "zip",
+            "rdf_xml": "rdf",
+            "json": "json",
+            "xml": "xml"
+        }
+
     def generate_sparql_query(self, user_query: str, orig_distributions: list[list[NkodDistribution]], llm_provider: BaseLLMProvider, model_name: str, nkod_data_processor: NkodDataProcessor, dataset_uris: list[str], language: str, sq_lite: SqLite, graph_db: GraphDb) -> tuple[str, list[NkodDistribution]]:
         processed_datasets = self.nkod_dataset_processor.process_datasets(orig_distributions)
         titles = self.get_dataset_titles(nkod_data_processor, sq_lite, dataset_uris, language)
         publishers = self.get_dataset_publishers(nkod_data_processor, graph_db, dataset_uris, language)
         titles_str = "\n".join(titles)
         publishers_str = "\n".join(publishers)
+        files_ids = self.upload_files(processed_datasets)
 
         sparql_query = llm_provider.chat(
             user_prompt=nkod_openai_files_user[model_name],
@@ -47,8 +62,6 @@ class NkodOpenAiFiles:
                 "titles": titles_str
             }
         )
-
-        print(processed_datasets)
 
         return sparql_query.content, processed_datasets
 

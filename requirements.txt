@@ -1,13 +1,9 @@
 beautifulsoup4==4.14.2
 chromadb==0.6.3
 fastapi==0.121.0
-langchain==1.0.3
-langchain_community==0.4.1
-langchain_google_genai==3.0.1
-langchain_openai==1.0.2
-logtail==1.0.1
-logtail_python==0.3.4
-numpy==2.3.4
+langchain==0.3.21
+langchain_openai~=0.3.12
+numpy==2.2.4
 openai==2.7.1
 pandas==2.3.3
 pydantic==2.12.4

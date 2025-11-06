@@ -1,6 +1,4 @@
 import streamlit as st
-from src.data_service import get_mock_datasets
-from src.fe_handler import get_query_matching_datasets
 
 
 st.title("🔍 Query Matching")

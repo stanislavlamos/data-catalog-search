@@ -24,7 +24,7 @@ class OpenAILLMProvider(BaseLLMProvider):
         if file_ids is not None:
             human_message_content = [
                 {"type": "text", "text": user_prompt},
-                *[{"type": "file", "file_id": fid} for fid in file_ids]
+                *[{"type": "file", "file": {"file_id": fid}} for fid in file_ids]
             ]
         else:
             human_message_content = user_prompt

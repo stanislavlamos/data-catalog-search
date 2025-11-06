@@ -10,6 +10,13 @@ start_fe:
 start_be:
 	uvicorn main:app --reload
 
-make setup:
+setup:
+	mkdir -p ./data/nkod/tmp
 	make install
 	make index
+
+clean_openai_files:
+	python -c "from src.services.cleaner import clean_openai_files; clean_openai_files()"
+
+clean_tmp_dir:
+	python -c "from src.services.cleaner import clean_tmp_folder; clean_tmp_folder()"

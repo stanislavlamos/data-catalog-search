@@ -85,10 +85,13 @@ def generate_sparql(query: str, model_name: str, selected_datasets: List[str], l
     """
     graph_result = get_graph_sparql_response(query, model_name, selected_datasets, language)
     rag_result = get_rag_response(query, model_name, selected_datasets, language)
+    openai_files = get_openai_files_response(query, model_name, selected_datasets, language)
+
 
     return {
         "graph_sparql": graph_result,
-        "rag": rag_result
+        "rag": rag_result,
+        "openai_files": openai_files
     }
 
 def get_graph_sparql_response(query: str, model_name: str, dataset_uris: List[str], language: str) -> Dict[str, Any]:
@@ -120,4 +123,18 @@ def get_rag_response(query: str, model_name: str, dataset_uris: List[str], langu
 
     return response.json()
 
+
+def get_openai_files_response(query: str, model_name: str, dataset_uris: List[str], language: str) -> Dict[str, Any]:
+    response = requests.post(
+        f"{API_BASE_URL}/nkod-openai-files",
+        json={
+            "query": query,
+            "model_name": model_name,
+            "dataset_uris": dataset_uris,
+            "language": language
+        }
+    )
+    response.raise_for_status()
+
+    return response.json()
 

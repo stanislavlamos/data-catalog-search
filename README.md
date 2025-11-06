@@ -30,5 +30,4 @@ http://localhost:8501
 ## Demo notebooks
 Useful demo Jupyter notebooks included in this repository:
 
-- [experiments_query_matching.ipynb](experiments_query_matching.ipynb) — Data loading and cleaning pipeline; shows how catalog metadata is prepared for indexing and RAG.
 - [experiments_sparql_generation.ipynb](experiments_sparql_generation.ipynb) — Embeddings generation and vector index building (sentence-transformers / FAISS examples).

@@ -64,7 +64,7 @@ class NkodSparqlGenerationEvaluator:
             print("-" * 80)
             print("\n")
     
-    def evaluate_on_ofn_dataset_nkod_openai_files(self, ofn_dataset_fname: str, nkod_graph_sparql: NkodOpenAiFiles, nkod_data_processor: NkodDataProcessor, llm_provider: BaseLLMProvider, model_name: str,  graph_db: GraphDb, sq_lite: SqLite, language: str = "cs"):
+    def evaluate_on_ofn_dataset_nkod_openai_files(self, ofn_dataset_fname: str, nkod_openai_files: NkodOpenAiFiles, nkod_data_processor: NkodDataProcessor, llm_provider: BaseLLMProvider, model_name: str,  graph_db: GraphDb, sq_lite: SqLite, language: str = "cs"):
         ofn_samples = load_jsonl_to_list(os.path.join(self.data_path, ofn_dataset_fname))
 
         for idx, ofn_sample in enumerate([ofn_samples[4]]):
@@ -76,7 +76,7 @@ class NkodSparqlGenerationEvaluator:
             dataset_uris = ofn_sample['dataset_uris']
             distributions = [nkod_data_processor.get_dataset_distributions(dataset_uri, graph_db) for dataset_uri in dataset_uris]
 
-            sparql_query, distributions = nkod_graph_sparql.generate_sparql_query(query, distributions, llm_provider, model_name, nkod_data_processor, dataset_uris, language, sq_lite, graph_db)
+            sparql_query, distributions = nkod_openai_files.generate_sparql_query(query, distributions, llm_provider, model_name, nkod_data_processor, dataset_uris, language, sq_lite, graph_db)
             print(f"SPARQL query from NKOD OpenAi Files:\n{delete_sparql_backticks(sparql_query)}")
 
             nkod_graph = NkodRdfGraph(distributions)
