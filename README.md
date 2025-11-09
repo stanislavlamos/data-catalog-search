@@ -30,4 +30,4 @@ http://localhost:8501
 ## Demo notebooks
 Useful demo Jupyter notebooks included in this repository:
 
-- [experiments_sparql_generation.ipynb](experiments_sparql_generation.ipynb) — Embeddings generation and vector index building (sentence-transformers / FAISS examples).
+- [experiments_sparql_generation.ipynb](experiments_sparql_generation.ipynb) — Embeddings generation and vector index building
