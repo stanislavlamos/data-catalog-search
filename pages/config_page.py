@@ -13,7 +13,7 @@ query = st.text_area("Query", value=st.session_state.config.get('query', ''), he
 
 llm_model = st.selectbox(
     "LLM Model",
-    options=["gpt-5", "gpt-4.1", "claude_sonnet_4.5", "claude_sonnet_4"],
+    options=["gpt-5"],#, "gpt-4.1", "claude_sonnet_4.5", "claude_sonnet_4"],
     index=0 if 'llm_model' not in st.session_state.config else ["gpt-5", "gpt-4.1", "claude_sonnet_4.5", "claude_sonnet_4"].index(st.session_state.config.get('llm_model', 'gpt-5')),
     help="Select the LLM model to use for SPARQL query generation"
 )
