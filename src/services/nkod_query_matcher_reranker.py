@@ -36,7 +36,7 @@ class NkodQueryMatcherReranker:
                     current_matched_dataset = matched_dataset
                     break
 
-            ret_lst.append(current_matched_dataset)
-            
+            if current_matched_dataset is not None:
+                ret_lst.append(current_matched_dataset)
 
         return  ret_lst

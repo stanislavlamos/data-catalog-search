@@ -114,8 +114,8 @@ def render_dataset_columns(selected_datasets):
 
 rag_data["name"] = "RAG pipeline"
 graph_sparql_data["name"] = "Graph SPARQL pipeline"
-#openai_files_data["name"] = "OpenAI Files pipeline"
-selected_datasets_out = [rag_data, graph_sparql_data]#, openai_files_data]
+openai_files_data["name"] = "OpenAI Files pipeline"
+selected_datasets_out = [rag_data, graph_sparql_data, openai_files_data]
 render_dataset_columns(selected_datasets_out)
 
 st.markdown("---")
@@ -167,5 +167,5 @@ with col2:
         for key in list(st.session_state.keys()):
             del st.session_state[key]
 
-        st.session_state.current_page = 'home_page'
+        st.session_state.current_page = 'homepage'
         st.rerun()

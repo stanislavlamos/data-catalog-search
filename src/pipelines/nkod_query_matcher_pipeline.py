@@ -33,6 +33,8 @@ class NkodQueryMatcherPipeline:
         matched_titles, matched_descs, matched_keywords = self._run_query_matching_parallel()
         reranked_matched_titles, reranked_matched_descs, reranked_matched_keywords = self._run_reranking_parallel(matched_titles, matched_descs, matched_keywords)
 
+        print(reranked_matched_titles, reranked_matched_descs, reranked_matched_keywords)
+        
         return NkodQueryMatcherResponse(
             matched_titles=reranked_matched_titles,
             matched_descriptions=reranked_matched_descs,

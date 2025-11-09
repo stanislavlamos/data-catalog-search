@@ -12,6 +12,7 @@ from datetime import datetime
 import json
 import os
 from src.prompts import nkod_openai_files_user, nkod_openai_files_system
+import openai
 
 
 load_dotenv()
@@ -60,10 +61,11 @@ class NkodOpenAiFiles:
                 "question": user_query,
                 "publishers": publishers_str,
                 "titles": titles_str
-            }
+            },
+            file_ids=files_ids
         )
-
-        return sparql_query.content, processed_datasets
+        
+        return sparql_query, processed_datasets
 
     def upload_file(self, file_path: str, purpose: str = "assistants") -> str:
         with open(file_path, "rb") as f:
@@ -139,3 +141,4 @@ class NkodOpenAiFiles:
             titles.append(title)
 
         return titles
+    

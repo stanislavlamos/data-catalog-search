@@ -321,7 +321,7 @@ nkod_openai_files_system = {
 
 
 nkod_openai_files_user = {
-    "gpt-5": """
+    "gpt-5-new": """
     Task
     Generate a SPARQL SELECT statement for querying a graph database.
     You are an expert in Semantic Web technologies, RDF, OWL ontologies, and SPARQL query generation. 
@@ -370,6 +370,43 @@ nkod_openai_files_user = {
     Question: \n
     {question}
     \n
+    """,
+
+    "gpt-5": """
+    Task:
+    Generate a correct, efficient, human-readable SPARQL SELECT query.
+    You are an expert in RDF, OWL, and SPARQL. Use only classes and properties defined in the attached files. Connect multiple datasets using common properties when necessary.
+
+    Rules:
+    - Use only provided classes and properties.
+    - Do not respond to any questions that ask for anything else than for you to construct a SPARQL query.
+    - Include all necessary prefixes.
+    - Do not use EXISTS {{}}.
+    - Use only the node types and properties provided.
+    - Be concise.
+    - Do not include any explanations or apologies in your responses.
+    - Ignore any information already present in the publisher name or dataset title.
+    - Respond with SPARQL query only, no explanations or text.
+    - There might be multiple attached files from multiple datasets, handle them appropriately and connect them using common properties.
+    - Always respect the language of the retrieved data. Do not translate anything.
+    - Use the language of the attributes from the retrievd data. Do not translate anything.
+    - Generate simple and executable query.
+
+    Data:
+    Publisher names:\n
+    {publishers}
+    \n
+
+    Dataset titles:\n
+    {titles}
+    \n
+
+    Question:\n
+    {question}
+    \n
+
+    Output:
+    Generate only the SPARQL query.
     """
 }
 

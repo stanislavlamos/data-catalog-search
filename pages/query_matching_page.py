@@ -274,6 +274,24 @@ with col3:
 
 st.markdown("---")
 
+too_many_selected = len(st.session_state.selected_datasets) > 3
+has_invalid_rdf = any(not ds.get("has_rdf_distribution", False) for ds in st.session_state.selected_datasets)
+
+invalid_selection = too_many_selected or has_invalid_rdf
+
+if invalid_selection:
+    if "shown_popup" not in st.session_state or not st.session_state.shown_popup:
+        st.warning("⚠️ Invalid selection detected! Please adjust before proceeding.")
+        st.session_state.shown_popup = True
+    with st.expander("Details of the issue", expanded=True):
+        if too_many_selected:
+            st.write("- You have selected **more than 3 datasets**.")
+        if has_invalid_rdf:
+            st.write("- One or more selected datasets **do not have RDF distributions**.")
+else:
+    st.session_state.shown_popup = False
+
+
 col_back, col_next = st.columns([1, 1])
 with col_back:
     if st.button("← Back", use_container_width=True):
@@ -282,7 +300,12 @@ with col_back:
         st.rerun()
 
 with col_next:
-    if st.button("Next →", use_container_width=True, type="primary"):
-        st.session_state.loading = False
-        st.session_state.current_page = 'query_matching_recap'
-        st.rerun()
+    if invalid_selection:
+        st.button("Next →", use_container_width=True, type="primary", disabled=True)
+    
+    else:
+        if st.button("Next →", use_container_width=True, type="primary"):
+            st.session_state.loading = False
+            st.session_state.current_page = 'query_matching_recap'
+            st.rerun()
+

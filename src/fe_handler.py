@@ -69,23 +69,26 @@ def query_matching_content(query: str, llm_provider: str, model_name: str, langu
     return matching_query_result, all_datasets_result    
 
 
-def generate_sparql(query: str, model_name: str, selected_datasets: List[str], language: str) -> Dict[str, Any]:
-    """    
+def generate_sparql(query: str, model_name: str, selected_datasets: List[str], language: str) -> Dict[str, Any]:   
     with ThreadPoolExecutor(max_workers=2) as executor:
         future_graph = executor.submit(get_graph_sparql_response, query, model_name, selected_datasets, language)
         future_rag = executor.submit(get_rag_response, query, model_name, selected_datasets, language)
+        future_openai_files = executor.submit(get_openai_files_response, query, model_name, selected_datasets, language)        
 
         graph_result = future_graph.result()
         rag_result = future_rag.result()
+        openai_files_result = future_openai_files.result()
 
     return {
         "graph_sparql": graph_result,
-        "rag": rag_result
+        "rag": rag_result,
+        "openai_files": openai_files_result
     }
     """
     graph_result = get_graph_sparql_response(query, model_name, selected_datasets, language)
     rag_result = get_rag_response(query, model_name, selected_datasets, language)
     openai_files = get_openai_files_response(query, model_name, selected_datasets, language)
+    
 
 
     return {
@@ -93,6 +96,7 @@ def generate_sparql(query: str, model_name: str, selected_datasets: List[str], l
         "rag": rag_result,
         "openai_files": openai_files
     }
+    """
 
 def get_graph_sparql_response(query: str, model_name: str, dataset_uris: List[str], language: str) -> Dict[str, Any]:
     response = requests.post(

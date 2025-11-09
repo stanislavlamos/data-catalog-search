@@ -27,7 +27,10 @@ class NkodGraphSparqlPipeline:
         sparql_query, distributions = nkod_graph_sparql.generate_sparql_query(self.query, distributions, self.llm_provider, self.model_name, self.nkod_data_processor, self.dataset_uris, self.language, self.sq_lite, self.graph_db)
         sparql_query = delete_sparql_backticks(sparql_query)
         
-        #nkod_graph = NkodRdfGraph(distributions)
-        query_result = []#nkod_graph.query_graph(sparql_query)
+        try:
+            nkod_graph = NkodRdfGraph(distributions)
+            query_result = nkod_graph.query_graph(sparql_query)
+        except Exception as e:
+            query_result = ["TODO error loop"]
             
         return NkodGraphSparqlResponse(sparql_query=sparql_query, query_result=query_result)

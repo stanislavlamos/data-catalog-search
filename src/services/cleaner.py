@@ -24,3 +24,11 @@ def clean_tmp_folder():
     os.makedirs(tmp_dir, exist_ok=True)
 
     print(f"Cleaned temporary folder: {tmp_dir}")
+
+def clean_openai_vector_store():
+    client = OpenAI()
+    stores = client.vector_stores.list().data
+
+    for store in stores:
+        client.vector_stores.delete(store.id)
+        print(f"Deleted vector store: {store.name or store.id}")

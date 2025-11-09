@@ -5,6 +5,7 @@ from src.schemas.nkod_openai_files_request import NkodOpenAiFilesRequest
 from src.schemas.nkod_openai_files_response import NkodOpenAiFilesResponse
 from src.services.nkod_data_processor import NkodDataProcessor
 from src.services.nkod_openai_files import NkodOpenAiFiles
+from src.services.nkod_rdf_graph import NkodRdfGraph
 from src.utils import delete_sparql_backticks
 
 
@@ -25,7 +26,10 @@ class NkodOpenAiFilesPipeline:
             sparql_query, distributions = nkod_openai_files.generate_sparql_query(self.query, distributions, self.llm_provider, self.model_name, self.nkod_data_processor, self.dataset_uris, self.language, self.sq_lite, self.graph_db)
             sparql_query = delete_sparql_backticks(sparql_query)
 
-            #nkod_graph = NkodRdfGraph(distributions)
-            query_result = []#nkod_graph.query_graph(sparql_query)
+            try:
+                nkod_graph = NkodRdfGraph(distributions)
+                query_result = nkod_graph.query_graph(sparql_query)
+            except Exception as e:
+                query_result = ["TODO error loop"]
 
             return NkodOpenAiFilesResponse(sparql_query=sparql_query, query_result=query_result)

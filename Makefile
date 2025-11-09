@@ -20,3 +20,6 @@ clean_openai_files:
 
 clean_tmp_dir:
 	python -c "from src.services.cleaner import clean_tmp_folder; clean_tmp_folder()"
+
+clean_openai_vector_stores:
+	python -c "from src.services.cleaner import clean_openai_vector_store; clean_openai_vector_store()"
