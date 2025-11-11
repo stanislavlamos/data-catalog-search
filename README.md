@@ -8,17 +8,23 @@ OPENAI_API_KEY=
 API_BASE_URL= http://127.0.0.1:8000
 ```
 
-2. Install dependencies
+2. Create and activate custom environment
+```shell
+./setup_env.sh
+source "$ENV_NAME/bin/activate"
+```
+
+3. Install dependencies
 ```shell
 make setup
 ```
 
-3. Start BE app
+4. Start BE app
 ```shell
 make start_be
 ```
 
-4. Start FE app
+5. Start FE app
 ```shell
 make start_fe
 ```

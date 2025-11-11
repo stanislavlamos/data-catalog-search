@@ -74,6 +74,3 @@ class NkodTemporalMetadata(BaseModel):
     endDate: str | None = Field(None, description="End date of the dataset")
     agentCs: str | None = Field(None, description="Publisher of the dataset in Czech")
     agentEn: str | None = Field(None, description="Publisher of the dataset in English")
-
-from langchain.chains import GraphSparqlQAChain
-import langchain_community.chains.graph_qa.sparql
