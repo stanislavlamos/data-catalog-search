@@ -60,6 +60,11 @@ class NkodGraphSparql:
 
         ', '.join([self._res_to_str(r, 'rel') for r in graph_relationships])
 
+    def _generate_graph_class_properties(self, processed_datasets: list[NkodDistribution]):
+        #for processed_dataset in processed_datasets:
+        #    res_rel = NkodRdfGraph.get_graph(processed_dataset).query(get_relationships_nkod_local)
+        pass
+    
     def _get_local_name(self, iri: str) -> str:
         if "#" in iri:
             local_name = iri.split("#")[-1]

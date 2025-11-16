@@ -70,7 +70,7 @@ def query_matching_content(query: str, llm_provider: str, model_name: str, langu
 
 
 def generate_sparql(query: str, model_name: str, selected_datasets: List[str], language: str) -> Dict[str, Any]:   
-    with ThreadPoolExecutor(max_workers=2) as executor:
+    with ThreadPoolExecutor(max_workers=3) as executor:
         future_graph = executor.submit(get_graph_sparql_response, query, model_name, selected_datasets, language)
         future_rag = executor.submit(get_rag_response, query, model_name, selected_datasets, language)
         future_openai_files = executor.submit(get_openai_files_response, query, model_name, selected_datasets, language)        

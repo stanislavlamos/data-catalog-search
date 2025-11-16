@@ -10,8 +10,8 @@ API_BASE_URL= http://127.0.0.1:8000
 
 2. Create and activate custom environment
 ```shell
-./setup_env.sh
-source "$ENV_NAME/bin/activate"
+make create_env
+source data_catalog_env/bin/activate
 ```
 
 3. Install dependencies

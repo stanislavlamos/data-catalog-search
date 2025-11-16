@@ -1,5 +1,7 @@
 {"desc": "jednoduchý dotaz", "query": "Kolik je pracovišť na MFF UK?", "language": "cs", "timeframe": "None", "dataset_uris": ["https://data.gov.cz/zdroj/datové-sady/00216208/cebf155a0b6cc8d439c960145f1601a6"]}
 {"desc": "jednoduchý dotaz", "query":  "Jaké jsou aktuality v Říčanech?", "language": "cs", "timeframe": "None", "dataset_uris": ["https://data.gov.cz/zdroj/datové-sady/00240702/1424895444"]}
+{"desc": "jednoduchý dotaz", "query": "Ukaž počty všech žádostí o sirotčí důchody ve všech krajích.", "language": "cs", "timeframe": "None", "dataset_uris": ["https://data.gov.cz/zdroj/datové-sady/00006963/b30dda400f7f44b2ed740e9823d44cd7"]}
+{"desc": "jednoduchý dotaz", "query": "Ukaž počty žádostí o starobní důchody v roce 2023.", "language": "cs", "timeframe": "None", "dataset_uris": ["https://data.gov.cz/zdroj/datové-sady/00006963/5f3c7ddf61d6473744da95fe1f62dab9"]}
 {"desc": "jednoduchý dotaz", "query": "Ukaz vsechny turisticke cile a zda jsou bezbarierove?", "language": "cs", "timeframe": "None", "dataset_uris": ["https://data.gov.cz/zdroj/datové-sady/00235938/1355924909"]}
 {"desc": "jednoduchý dotaz", "query": "Jaké jsou názvy agentur, které mají povolení k vyhledávání zaměstnání?", "language": "cs", "timeframe": "None", "dataset_uris": ["https://data.gov.cz/zdroj/datov%C3%A9-sady/00551023/97cc2f93fb68734595e42f93f77c8021"]}
 {"desc": "jednoduchý dotaz", "query": "Jaké jsou aktuality ohledně řidičáku?", "language": "cs", "timeframe": "None", "dataset_uris": ["https://data.gov.cz/zdroj/datové-sady/00253383/1137956007"]}

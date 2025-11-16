@@ -224,3 +224,11 @@ WHERE {
   }
 }
 """
+
+
+get_class_properties_nkod_remote = """
+SELECT DISTINCT ?p WHERE {
+  ?instance a ?cls .
+  ?cls ?p ?com .
+}
+"""

@@ -436,6 +436,8 @@ class NkodDataProcessor(BaseDataProcessor):
         nkod_datasets_df = pd.DataFrame(pd.read_csv(self.datasets_path)["datová_sada"].unique(), columns=["datová_sada"])
         nkod_distributions_df = pd.DataFrame(pd.read_csv(self.distributions_path)["datová_sada"].unique(), columns=["datová_sada"])
         my_metadata_df = pd.read_csv(self.metadata_csv_path)
+        print(my_metadata_df.head())
+        print(f"my metadata shape: {my_metadata_df.shape}")
         aligned_metadata_df = intersect_dataframes(my_metadata_df, nkod_datasets_df, left_on="dataset_uri", right_on="datová_sada")
         aligned_metadata_df = intersect_dataframes(aligned_metadata_df, nkod_distributions_df, left_on="dataset_uri", right_on="datová_sada")
         

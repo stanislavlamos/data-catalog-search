@@ -1,5 +1,4 @@
 install:
-	pip install --upgrade pip
 	pip install -r requirements.txt --break-system-packages
 
 index:
@@ -24,3 +23,7 @@ clean_tmp_dir:
 
 clean_openai_vector_stores:
 	python -c "from src.services.cleaner import clean_openai_vector_store; clean_openai_vector_store()"
+
+create_env:
+	rm -rf data_catalog_env
+	python -m venv data_catalog_env
