@@ -1,25 +1,25 @@
 get_keywords_czech_nkod = """
-    SELECT dataset_uri, keywords_cs, title_cs, has_rdf_distribution FROM {table_name} WHERE has_rdf_distribution = TRUE
+    SELECT dataset_uri, keywords_cs, title_cs, has_rdf_distribution FROM {table_name}
 """
 
 get_keywords_english_nkod = """
-    SELECT dataset_uri, keywords_en, title_en, has_rdf_distribution FROM {table_name} WHERE has_rdf_distribution = TRUE
+    SELECT dataset_uri, keywords_en, title_en, has_rdf_distribution FROM {table_name}
 """
 
 get_descriptions_czech_nkod = """
-    SELECT dataset_uri, description_cs, title_cs, has_rdf_distribution FROM {table_name} WHERE has_rdf_distribution = TRUE
+    SELECT dataset_uri, description_cs, title_cs, has_rdf_distribution FROM {table_name}
 """
 
 get_descriptions_english_nkod = """
-    SELECT dataset_uri, description_en, title_en, has_rdf_distribution FROM {table_name} WHERE has_rdf_distribution = TRUE
+    SELECT dataset_uri, description_en, title_en, has_rdf_distribution FROM {table_name}
 """
 
 get_titles_english_nkod = """
-    SELECT dataset_uri, title_en, has_rdf_distribution FROM {table_name} WHERE has_rdf_distribution = True
+    SELECT dataset_uri, title_en, has_rdf_distribution FROM {table_name}
 """
 
 get_titles_czech_nkod = """
-    SELECT dataset_uri, title_cs, has_rdf_distribution FROM {table_name} WHERE has_rdf_distribution = True
+    SELECT dataset_uri, title_cs, has_rdf_distribution FROM {table_name}
 """
 
 get_titles_and_descs_czech_nkod = """

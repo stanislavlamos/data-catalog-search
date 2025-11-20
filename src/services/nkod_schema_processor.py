@@ -22,7 +22,6 @@ class NkodSChemaProcessor:
         project_dir = Path(__file__).resolve().parent.parent.parent
         self.data_path = os.path.join(project_dir, self.DATA_DIR, self.catalog_name)
         self.tmp_folder_path = os.path.join(self.data_path, "tmp")
-        self.rdfizer_config_fname = None
         self.format_to_extension_distribution = {
             "json-ld": "jsonld",
             "json_ld": "jsonld",

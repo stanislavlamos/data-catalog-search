@@ -12,6 +12,11 @@ start_be:
 
 setup:
 	mkdir -p ./data/nkod/tmp
+	find ./data/nkod -type d -name "*-*" -exec rm -r {} +
+	rm -f ./data/nkod/chroma.sqlite3
+	rm -f ./data/nkod/chroma.sqlite3-journal
+	rm -f ./data/nkod/nkod_metadata.db
+	rm -f ./data/nkod/nkod_themes.db
 	make install
 	make index
 

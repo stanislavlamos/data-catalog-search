@@ -29,7 +29,9 @@ class OpenAILLMProvider(BaseLLMProvider):
             SystemMessage(content=system_prompt),
             HumanMessage(content=user_prompt)
         ]
+        print(f"User prompt: {user_prompt}")
         response = llm.invoke(messages)
+        #print(f"usage metadata: {response.usage_metadata}")
 
         return response
     
