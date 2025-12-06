@@ -70,33 +70,37 @@ def query_matching_content(query: str, llm_provider: str, model_name: str, langu
 
 
 def generate_sparql(query: str, model_name: str, selected_datasets: List[str], language: str) -> Dict[str, Any]:   
-    with ThreadPoolExecutor(max_workers=3) as executor:
+    """
+    with ThreadPoolExecutor(max_workers=4) as executor:
         future_graph = executor.submit(get_graph_sparql_response, query, model_name, selected_datasets, language)
         future_rag = executor.submit(get_rag_response, query, model_name, selected_datasets, language)
-        future_openai_files = executor.submit(get_openai_files_response, query, model_name, selected_datasets, language)        
+        future_openai_files = executor.submit(get_openai_files_response, query, model_name, selected_datasets, language)
+        future_shacl = executor.submit(get_shacl_response, query, model_name, selected_datasets, language)      
 
         graph_result = future_graph.result()
         rag_result = future_rag.result()
         openai_files_result = future_openai_files.result()
+        shacl_result = future_shacl.result()
 
     return {
         "graph_sparql": graph_result,
         "rag": rag_result,
-        "openai_files": openai_files_result
+        "openai_files": openai_files_result,
+        "shacl": shacl_result
     }
     """
     graph_result = get_graph_sparql_response(query, model_name, selected_datasets, language)
     rag_result = get_rag_response(query, model_name, selected_datasets, language)
     openai_files = get_openai_files_response(query, model_name, selected_datasets, language)
+    shacl_result = get_shacl_response(query, model_name, selected_datasets, language)
     
-
-
     return {
         "graph_sparql": graph_result,
         "rag": rag_result,
-        "openai_files": openai_files
+        "openai_files": openai_files,
+        "shacl": shacl_result
     }
-    """
+    
 
 def get_graph_sparql_response(query: str, model_name: str, dataset_uris: List[str], language: str) -> Dict[str, Any]:
     response = requests.post(
@@ -131,6 +135,21 @@ def get_rag_response(query: str, model_name: str, dataset_uris: List[str], langu
 def get_openai_files_response(query: str, model_name: str, dataset_uris: List[str], language: str) -> Dict[str, Any]:
     response = requests.post(
         f"{API_BASE_URL}/nkod-openai-files",
+        json={
+            "query": query,
+            "model_name": model_name,
+            "dataset_uris": dataset_uris,
+            "language": language
+        }
+    )
+    response.raise_for_status()
+
+    return response.json()
+
+
+def get_shacl_response(query: str, model_name: str, dataset_uris: List[str], language: str) -> Dict[str, Any]:
+    response = requests.post(
+        f"{API_BASE_URL}/nkod-shacl",
         json={
             "query": query,
             "model_name": model_name,

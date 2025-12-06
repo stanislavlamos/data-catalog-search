@@ -1,3 +1,4 @@
+import re
 import requests
 import os
 import csv
@@ -9,9 +10,10 @@ from ..db.graph_db import GraphDb
 from ..db.sq_lite import SqLite
 from ..models.base import BaseEmbeddingProvider
 from ..schemas.schemas import NkodDistribution
+import numpy as np
 from ..sparql_queries import get_catalogs_metadata_and_themes_nkod_remote, \
-    get_all_dcat_themes_nkod_remote, get_dataset_distributions_nkod_remote, get_dataset_publisher_nkod_remote, \
-    get_publisher_by_dataset_nkod_remote, get_all_distributions_and_formats_nkod_remote
+    get_all_dcat_themes_nkod_remote, get_dataset_distributions_nkod_remote, nkod_local_graphdb_get_publisher_all, \
+    get_publisher_by_dataset_nkod_remote, get_all_distributions_and_formats_nkod_remote, get_all_distributions_nkod_remote
 from src.services.base_data_processor import BaseDataProcessor
 from ..sql_queries import get_keywords_czech_nkod, get_keywords_english_nkod, get_descriptions_czech_nkod, \
     get_descriptions_english_nkod, get_titles_english_nkod, get_titles_czech_nkod, get_themes_labels_english_nkod, \
@@ -42,11 +44,12 @@ class NkodDataProcessor(BaseDataProcessor):
         self.metadata_sql_path = os.path.join(self.data_path, f"{self.metadata_sql_table_name}.db")
         self.themes_csv_path = os.path.join(self.data_path, "nkod_themes.csv")
         self.themes_sql_table_name = "nkod_themes"
-        self.themes_sql_path = os.path.join(self.data_path, f"{self.themes_sql_table_name}.db")
-        self.distributions_sql_table_name = "nkod_distributions"
-        self.distributions_sql_path = os.path.join(self.data_path, f"{self.distributions_sql_table_name}.db")
-        self.distributions_csv_path = os.path.join(self.data_path, "nkod_distributions.csv")
+        self.ofn_dataset_sql_table_name = "nkod_ofn"
+        self.distributions_csv_path_queried = os.path.join(self.data_path, "nkod_distributions_queried.csv")
         self.publishers_csv_path = os.path.join(self.data_path, "nkod_publishers.csv")
+        self.ofn_metadata_csv_path = os.path.join(self.data_path, "nkod_ofn_metadata.csv")
+        self.allowed_ofns = ['turistické cíle', 'aktuality', 'události', 'sportoviště', 'sběrné dvory', 'úřední deska', 'úřední desky']
+        self.distribution_download_location = os.path.join(self.data_path, "distributions")
 
         self.sql_columns_metadata = [
             "dataset_uri",
@@ -130,7 +133,7 @@ class NkodDataProcessor(BaseDataProcessor):
         with open(self.datasets_path, "wb") as f:
             f.write(response.content)
 
-        print(f"Datasets file downloaded as {self.distributions_path}")
+        print(f"Datasets file downloaded as {self.datasets_path}")
 
     def _index_keywords(self, sq_lite: SqLite, embedding_provider: BaseEmbeddingProvider, chroma_db: ChromaDb, language: str = "cs", verbose: bool = False) -> None:
         if language == "cs":
@@ -320,7 +323,7 @@ class NkodDataProcessor(BaseDataProcessor):
         print(f"CSV created with themes created at {self.themes_csv_path}")
 
     def create_metadata_sql(self, sq_lite: SqLite):
-        sq_lite.create_table(self.metadata_sql_table_name, self.sql_columns_metadata)
+        sq_lite.create_table(self.metadata_sql_table_name, self.sql_columns_metadata+['publisher_en', 'publisher_cs'])
         sq_lite.insert_data_from_csv(self.metadata_sql_table_name, self.metadata_csv_path)
 
         print(f"Created SQL table '{self.metadata_sql_table_name}' in {self.metadata_sql_path}")
@@ -329,13 +332,13 @@ class NkodDataProcessor(BaseDataProcessor):
         sq_lite.create_table(self.themes_sql_table_name, self.sql_columns_themes)
         sq_lite.insert_data_from_csv(self.themes_sql_table_name, self.themes_csv_path)
 
-        print(f"Created SQL table '{self.themes_sql_table_name}' in {self.themes_sql_path}")
+        print(f"Created SQL table '{self.themes_sql_table_name}' in {self.metadata_sql_path}")
 
-    def create_distributions_sql(self, sq_lite: SqLite):
-        sq_lite.create_table(self.distributions_sql_table_name, self.sql_columns_distributions)
-        sq_lite.insert_data_from_csv(self.distributions_sql_table_name, self.distributions_csv_path)
+    def create_ofn_dataset_sql(self, sq_lite: SqLite):
+        sq_lite.create_table(self.ofn_dataset_sql_table_name, self.sql_columns_metadata+['publisher_en', 'publisher_cs'])
+        sq_lite.insert_data_from_csv(self.ofn_dataset_sql_table_name, self.ofn_metadata_csv_path)
 
-        print(f"Created SQL table '{self.distributions_sql_table_name}' in {self.distributions_sql_path}")
+        print(f"Created SQL table '{self.ofn_dataset_sql_table_name}' in {self.metadata_sql_path}")
 
     def get_dataset_distributions(self, dataset_uri: str, graph_db: GraphDb) -> list[NkodDistribution]:
         dataset_uri_with_braces = f"<{dataset_uri}>"
@@ -346,40 +349,31 @@ class NkodDataProcessor(BaseDataProcessor):
         return parsed_results
 
     def create_dataset_publisher_csv(self, graph_db: GraphDb):
-        # TODO: nefunguje, fixnout
-        sparql_results = graph_db.query_sparql_remote(get_dataset_publisher_nkod_remote, self.NKOD_ENDPOINT)
-        output_dict = {}
+        data = graph_db.query_test_local_repo(nkod_local_graphdb_get_publisher_all)
+        bindings = data['results']['bindings']
 
-        for item in sparql_results["results"]["bindings"]:
-            uri = item['dataset']['value']
-            lang = item['lang']['value']
-            publisher = item['value']['value']
+        records = []
+        for binding in bindings:
+            record = {key: binding[key]['value'] for key in binding}
+            records.append(record)
 
-            if uri not in output_dict:
-                output_dict[uri] = {}
+        df = pd.DataFrame(records)
+        df_en = df[df['lang'] == 'en'].copy()
+        en_lookup = df_en.set_index('dataset')['name']
+        df['publisher_en'] = df['dataset'].map(en_lookup)
+        df_final = df[df['lang'] != 'en'].copy()
+        df_final.rename(columns={'dataset': 'dataset_uri', 'name': 'publisher_cs'}, inplace=True)
 
-            if lang == 'cs':
-                output_dict[uri]['publisher_cs'] = publisher
-            elif lang == 'en':
-                output_dict[uri]['publisher_en'] = publisher
-
-        csv_rows = []
-        for uri, publishers in output_dict.items():
-            row = {'dataset_uri': uri}
-            row.update(publishers)
-            csv_rows.append(row)
-
-        fieldnames = ['dataset_uri', 'publisher_cs', 'publisher_en']
-
-        with open(self.publishers_csv_path, 'w', newline='', encoding='utf-8') as csvfile:
-            writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
-            writer.writeheader()
-            for row in csv_rows:
-                writer.writerow(row)
-
+        df_final.to_csv(self.publishers_csv_path, index=False)
         print(f"CSV file '{self.publishers_csv_path}' created successfully.")
 
     def get_dataset_publisher(self, dataset_uri: str, graph_db: GraphDb, language: str) -> str:
+        formated_query = get_publisher_by_dataset_nkod_remote.format(dataset_uri=dataset_uri)
+        sparql_results = graph_db.query_sparql_remote(formated_query, self.NKOD_ENDPOINT)
+
+        return sparql_results['results']['bindings'][0][f"name_{language}"]["value"]
+    
+    def get_dataset_publisher_all_languages(self, dataset_uri: str, graph_db: GraphDb, language: str) -> str:
         formated_query = get_publisher_by_dataset_nkod_remote.format(dataset_uri=dataset_uri)
         sparql_results = graph_db.query_sparql_remote(formated_query, self.NKOD_ENDPOINT)
 
@@ -436,8 +430,6 @@ class NkodDataProcessor(BaseDataProcessor):
         nkod_datasets_df = pd.DataFrame(pd.read_csv(self.datasets_path)["datová_sada"].unique(), columns=["datová_sada"])
         nkod_distributions_df = pd.DataFrame(pd.read_csv(self.distributions_path)["datová_sada"].unique(), columns=["datová_sada"])
         my_metadata_df = pd.read_csv(self.metadata_csv_path)
-        print(my_metadata_df.head())
-        print(f"my metadata shape: {my_metadata_df.shape}")
         aligned_metadata_df = intersect_dataframes(my_metadata_df, nkod_datasets_df, left_on="dataset_uri", right_on="datová_sada")
         aligned_metadata_df = intersect_dataframes(aligned_metadata_df, nkod_distributions_df, left_on="dataset_uri", right_on="datová_sada")
         
@@ -448,7 +440,7 @@ class NkodDataProcessor(BaseDataProcessor):
         return aligned_metadata_df
 
     def get_all_distributions_and_formats(self, graph_db: GraphDb) -> pd.DataFrame:
-        sparql_results = graph_db.query_sparql_remote(get_all_distributions_and_formats_nkod_remote, self.NKOD_ENDPOINT)
+        sparql_results = graph_db.query_test_local_repo(get_all_distributions_and_formats_nkod_remote)
 
         data = [
             {
@@ -460,4 +452,66 @@ class NkodDataProcessor(BaseDataProcessor):
         ]
 
         return pd.DataFrame(data)
+
+    def create_ofn_dataset(self):
+        df = pd.read_csv(self.metadata_csv_path)
+
+        regex_pattern = '(' + '|'.join(self.allowed_ofns) + ')'
+        extracted_matches = df['title_cs'].str.extract(regex_pattern, flags=re.IGNORECASE, expand=False)
+        df['matched_substring'] = np.where(
+            df['has_rdf_distribution'] == True,
+            extracted_matches,
+            np.nan
+        )
+        df = df[(df['has_rdf_distribution'] == True) & (df['matched_substring'].notna())]
+
+        df.to_csv(self.ofn_metadata_csv_path, index=False)
+        print(f"OFN metadata saved to {self.ofn_metadata_csv_path}")
     
+    def enrich_metadata_with_publisher(self):
+        nkod_metadata_large_df = pd.read_csv(self.metadata_csv_path)
+        nkod_publishers_df = pd.read_csv(self.publishers_csv_path)
+
+
+        metadata_uris = set(nkod_metadata_large_df['dataset_uri'])
+        publisher_uris = set(nkod_publishers_df['dataset_uri'])
+
+
+        # 2. Find the difference: URIs in metadata_uris but NOT in publisher_uris.
+        uris_in_metadata_only = metadata_uris - publisher_uris
+
+        # 3. Convert the resulting set back to a list.
+        result_uris = list(uris_in_metadata_only)
+
+        print("--- ✅ Dataset URIs found in nkod_metadata_large_df but NOT in nkod_publishers_df ---\n")
+        print(result_uris)
+
+
+        print(f"before: {nkod_metadata_large_df.shape}")
+        merged_df = pd.merge(
+            nkod_metadata_large_df, 
+            nkod_publishers_df, 
+            on='dataset_uri', 
+            how='inner'
+        )
+
+        columns_to_keep = self.sql_columns_metadata + ['publisher_en', 'publisher_cs']
+        final_result_df = merged_df[columns_to_keep]
+        final_result_df.to_csv(self.metadata_csv_path, index=False)
+        print(f"after: {final_result_df.shape}")
+        print(f"Enriched metadata saved to {self.metadata_csv_path}")
+    
+    def create_distributions_csv(self, graph_db: GraphDb):
+        data = graph_db.query_test_local_repo(get_all_distributions_nkod_remote)
+        bindings = data['results']['bindings']
+        df_data = []
+
+        for row in bindings:
+            new_row = {}
+            for key, item in row.items():
+                new_row[key] = item['value']
+            df_data.append(new_row)
+
+        df = pd.DataFrame(df_data)
+        df.to_csv(self.distributions_csv_path_queried, index=False)
+        print(f"CSV file '{self.distributions_csv_path_queried}' created successfully.")

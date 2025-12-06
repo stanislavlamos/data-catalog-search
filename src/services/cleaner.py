@@ -25,6 +25,15 @@ def clean_tmp_folder():
 
     print(f"Cleaned temporary folder: {tmp_dir}")
 
+def clean_distributions_folder():
+    project_dir = Path(__file__).resolve().parent.parent.parent
+    data_path = os.path.join(project_dir, "data", "nkod")
+    tmp_dir = os.path.join(data_path, "distributions")
+    shutil.rmtree(tmp_dir)
+    os.makedirs(tmp_dir, exist_ok=True)
+
+    print(f"Cleaned distributions folder: {tmp_dir}")
+
 def clean_openai_vector_store():
     client = OpenAI()
     stores = client.vector_stores.list().data

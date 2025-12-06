@@ -6,6 +6,9 @@ import random
 import json
 from src.schemas.schemas import DatasetSelectionOutput
 import pandas as pd
+import urllib.parse
+import os
+import glob
 
 
 def strip_text(txt: str) -> str:
@@ -335,3 +338,46 @@ def delete_sparql_backticks(inp_str: str) -> str:
 
 def intersect_dataframes(df1: pd.DataFrame, df2: pd.DataFrame, left_on: str, right_on: str) -> pd.DataFrame:
     return pd.merge(df1, df2, left_on=left_on, right_on=right_on, how='inner')
+
+
+def dir_name_from_uri(dataset_uri: str) -> str:
+    return dataset_uri.rstrip('/').rsplit('/', 1)[-1]
+
+
+def encode_graphdb_statements(statement: str) -> str:
+    return urllib.parse.quote(statement, safe='')
+
+
+def create_named_graph_uri(graph_iri: str):
+    return f"http://example.org/{graph_iri}"
+
+def find_files_with_prefix(directory_path, prefix) -> str | None:
+    search_pattern = os.path.join(directory_path, f"{prefix}*")
+    found_files = glob.glob(search_pattern)
+    
+    if not found_files:
+        return None
+    
+    return os.path.basename(found_files[0])
+
+def list_folders(search_path: str) -> list:
+    folder_names = []
+
+    for item_name in os.listdir(search_path):
+        full_path = os.path.join(search_path, item_name)
+        
+        if os.path.isdir(full_path):
+            folder_names.append(item_name)
+
+    return folder_names
+
+def check_dir_status_os(dir_path: str) -> bool:
+    if not os.path.exists(dir_path):
+        return False
+
+    elif not os.listdir(dir_path):
+        return False
+    
+    else:
+        return True
+

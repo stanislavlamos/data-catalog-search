@@ -50,6 +50,7 @@ datasets_per_row = 3
 rag_data = st.session_state.result.get("rag")
 graph_sparql_data = st.session_state.result.get("graph_sparql")
 openai_files_data = st.session_state.result.get("openai_files")
+shacl_data = st.session_state.result.get("shacl")
 
 def render_dataset_columns(selected_datasets):
     for row_idx in range(0, 3, datasets_per_row):
@@ -115,7 +116,8 @@ def render_dataset_columns(selected_datasets):
 rag_data["name"] = "RAG pipeline"
 graph_sparql_data["name"] = "Graph SPARQL pipeline"
 openai_files_data["name"] = "OpenAI Files pipeline"
-selected_datasets_out = [rag_data, graph_sparql_data, openai_files_data]
+shacl_data["name"] = "SHACL pipeline"
+selected_datasets_out = [rag_data, graph_sparql_data, openai_files_data, shacl_data]
 render_dataset_columns(selected_datasets_out)
 
 st.markdown("---")

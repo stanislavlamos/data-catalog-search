@@ -189,6 +189,49 @@ WHERE {{
 """
 
 
+nkod_remote_get_publisher_all = """
+PREFIX dct: <http://purl.org/dc/terms/>
+PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+PREFIX dcat: <http://www.w3.org/ns/dcat#>
+
+SELECT DISTINCT ?dataset_uri ?publisher (STR(?name_cs_raw) AS ?name_cs) (STR(?name_en_raw) AS ?name_en)
+WHERE {
+    ?dataset_uri a dcat:Dataset .
+
+    ?dataset_uri dct:publisher ?publisher .
+
+    OPTIONAL {
+        ?publisher foaf:name ?name_cs_raw .
+        FILTER(LANG(?name_cs_raw) = "cs" || LANG(?name_cs_raw) = "")
+    }
+
+    OPTIONAL {
+        ?publisher foaf:name ?name_en_raw .
+        FILTER(LANG(?name_en_raw) = "en")
+    }
+}
+"""
+
+
+nkod_local_graphdb_get_publisher_all = """
+PREFIX dct:  <http://purl.org/dc/terms/>
+PREFIX dcat: <http://www.w3.org/ns/dcat#>
+PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+
+SELECT DISTINCT ?dataset ?publisher ?name ?lang
+WHERE {
+  ?dataset a dcat:Dataset ;
+           dct:publisher ?publisher .
+
+  OPTIONAL {
+    ?publisher foaf:name ?name .
+    BIND(LANG(?name) AS ?lang)
+    FILTER(?lang IN ("cs","en",""))
+  }
+}
+"""
+
+
 get_classes_nkod_local = """
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 
@@ -230,5 +273,24 @@ get_class_properties_nkod_remote = """
 SELECT DISTINCT ?p WHERE {
   ?instance a ?cls .
   ?cls ?p ?com .
+}
+"""
+
+
+get_all_distributions_nkod_remote = """
+PREFIX dcat: <http://www.w3.org/ns/dcat#>
+PREFIX dct:  <http://purl.org/dc/terms/>
+PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+
+SELECT ?dataset ?distribution ?title ?format ?downloadURL ?accessURL ?conformsTo
+WHERE {
+  ?dataset a dcat:Dataset ;
+           dcat:distribution ?distribution .
+
+  OPTIONAL { ?distribution dct:title ?title . }
+  OPTIONAL { ?distribution dct:format ?format . }
+  OPTIONAL { ?distribution dcat:downloadURL ?downloadURL . }
+  OPTIONAL { ?distribution dcat:accessURL ?accessURL . }
+  OPTIONAL { ?distribution dct:conformsTo ?conformsTo . }
 }
 """

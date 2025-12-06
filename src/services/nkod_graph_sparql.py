@@ -40,7 +40,7 @@ class NkodGraphSparql:
 
         print(f"Used distributions: {processed_datasets}")
 
-        return sparql_query.content, processed_datasets
+        return sparql_query.content[0]["text"], processed_datasets
 
     def _generate_graph_classes(self, processed_datasets: list[NkodDistribution]) -> str:
         graph_classes = []

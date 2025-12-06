@@ -17,8 +17,10 @@ class NkodShacl:
     DATA_DIR = "data"
     NKOD_FILE_FORMAT_PREFIX = "http://publications.europa.eu/resource/authority/file-type/"
 
-    def __init__(self, catalog_name: str = "nkod"):
+    def __init__(self, catalog_name: str = "nkod", include_entities: bool = False):
         self.catalog_name = catalog_name
+        self.include_entities = include_entities
+
         project_dir = Path(__file__).resolve().parent.parent.parent
         self.data_path = os.path.join(project_dir, self.DATA_DIR, self.catalog_name)
         self.tmp_folder_path = os.path.join(self.data_path, "tmp")
@@ -70,7 +72,7 @@ class NkodShacl:
 
         print(f"Used distributions: {distributions}")
 
-        return sparql_query.content, distributions
+        return sparql_query.content[0]["text"], distributions
 
     def format_schemas_for_prompt(self, schemas: list[list[tuple[str, str]]]) -> str:
         schemas_str = ""
@@ -170,4 +172,21 @@ class NkodShacl:
             filtered_distributions.append(distribution)
 
         return filtered_distributions
+    
+    def is_distribution_file(self, distribution: NkodDistribution) -> bool:
+        if distribution.format.startswith(self.NKOD_FILE_FORMAT_PREFIX):
+            format_key = distribution.format.replace(self.NKOD_FILE_FORMAT_PREFIX, "")
+            file_extension = self.format_to_extension_distribution.get(format_key.lower(), None)
+            return file_extension is not None
+
+        return False
+    
+    def get_distribution_format(self, distribution: NkodDistribution) -> str | None:
+        if distribution.format.startswith(self.NKOD_FILE_FORMAT_PREFIX):
+            format_key = distribution.format.replace(self.NKOD_FILE_FORMAT_PREFIX, "")
+            file_extension = self.format_to_extension_distribution.get(format_key.lower(), None)
+            return file_extension
+
+        return None
+
     

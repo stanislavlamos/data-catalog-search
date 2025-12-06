@@ -22,15 +22,15 @@ class NkodGraphSparqlPipeline:
         self.language = request.language
 
     def run(self) -> NkodGraphSparqlResponse:
-        nkod_graph_sparql = NkodGraphSparql()
-        distributions = [self.nkod_data_processor.get_dataset_distributions(dataset_uri, self.graph_db) for dataset_uri in self.dataset_uris]
-        sparql_query, distributions = nkod_graph_sparql.generate_sparql_query(self.query, distributions, self.llm_provider, self.model_name, self.nkod_data_processor, self.dataset_uris, self.language, self.sq_lite, self.graph_db)
-        sparql_query = delete_sparql_backticks(sparql_query)
-        
         try:
+            nkod_graph_sparql = NkodGraphSparql()
+            distributions = [self.nkod_data_processor.get_dataset_distributions(dataset_uri, self.graph_db) for dataset_uri in self.dataset_uris]
+            sparql_query, distributions = nkod_graph_sparql.generate_sparql_query(self.query, distributions, self.llm_provider, self.model_name, self.nkod_data_processor, self.dataset_uris, self.language, self.sq_lite, self.graph_db)
+            sparql_query = delete_sparql_backticks(sparql_query)
             nkod_graph = NkodRdfGraph(distributions)
             query_result = nkod_graph.query_graph(sparql_query)
         except Exception as e:
+            sparql_query = "ERROR while generating class information with RDF lib"
             query_result = ["TODO error loop"]
             
         return NkodGraphSparqlResponse(sparql_query=sparql_query, query_result=query_result)

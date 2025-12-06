@@ -6,6 +6,7 @@ from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 from dotenv import load_dotenv
 from src.models.base import BaseLLMProvider, BaseEmbeddingProvider
 from datetime import datetime
+import time
 
 
 class OpenAILLMProvider(BaseLLMProvider):
@@ -17,11 +18,15 @@ class OpenAILLMProvider(BaseLLMProvider):
     def chat(self, user_prompt: str, system_prompt: str, user_prompt_vars: dict | None = None, system_prompt_vars: dict | None = None, structured_output: BaseModel | None = None, file_ids: list[str] | None = None) -> str | BaseModel:
         user_prompt = user_prompt.format(**(user_prompt_vars or {}))
         system_prompt = system_prompt.format(**(system_prompt_vars or {}))
+        start = time.time()
         
         if file_ids is not None:
+            end = time.time()
+            print(f"Elapsed time: {end - start:.4f} seconds")
             return self.chat_vector_store(user_prompt, system_prompt, file_ids)
         
-        llm = ChatOpenAI(model=self.model_name, temperature=self.temperature)
+        reasoning = {"effort": "low"}
+        llm = ChatOpenAI(model=self.model_name, temperature=self.temperature, reasoning=reasoning)
         if structured_output is not None:
             llm = llm.with_structured_output(structured_output)
 
@@ -29,9 +34,11 @@ class OpenAILLMProvider(BaseLLMProvider):
             SystemMessage(content=system_prompt),
             HumanMessage(content=user_prompt)
         ]
-        print(f"User prompt: {user_prompt}")
         response = llm.invoke(messages)
         #print(f"usage metadata: {response.usage_metadata}")
+
+        end = time.time()
+        print(f"Elapsed time: {end - start:.4f} seconds")
 
         return response
     

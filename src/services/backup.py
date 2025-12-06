@@ -1,11 +1,5 @@
 from src.schemas.schemas import NkodDistribution
-import requests
-import json
-import os
-import ssl
 
-
-ssl._create_default_https_context = ssl._create_unverified_context
 
 class NkodDatasetProcessor:
 
@@ -37,16 +31,19 @@ class NkodDatasetProcessor:
             "nt": 5
         }
 
-    def process_datasets(self, list_of_distributions: list[NkodDistribution], dir_path: str) -> NkodDistribution:
-        only_files_distributions = self.filter_only_files(list_of_distributions)
-        our_distribution = self.select_best_distribution(only_files_distributions)
+    def process_datasets(self, lst_of_list_of_distributions: list[list[NkodDistribution]]) -> list[NkodDistribution]:
+        processed_datasets = []
 
-        if self.format_to_extension_distribution.get(our_distribution.format.replace(self.NKOD_FILE_FORMAT_PREFIX, "").lower(), "Unknown format") in self.rdf_file_formats:
-            self.download_distribution(our_distribution, dir_path)
-            return our_distribution
-        
-        else:
-            raise ValueError("Non-rdf file detected!!!")
+        for list_of_distributions in lst_of_list_of_distributions:
+            only_files_distributions = self.filter_only_files(list_of_distributions)
+            our_distribution = self.select_best_distribution(only_files_distributions)
+
+            if self.format_to_extension_distribution.get(our_distribution.format.replace(self.NKOD_FILE_FORMAT_PREFIX, "").lower(), "Unknown format") in self.rdf_file_formats:
+                processed_datasets.append(our_distribution)
+            else:
+                raise ValueError("Non-rdf file detected!!!")
+
+        return processed_datasets
 
     def filter_only_files(self, distributions: list[NkodDistribution]) -> list[NkodDistribution]:
         filtered_distributions = []
@@ -80,27 +77,3 @@ class NkodDatasetProcessor:
             return file_extension is not None
 
         return False
-    
-    def download_distribution(self, distribution: NkodDistribution, dir_path: str):
-        response = requests.get(distribution.downloadURL, verify=False, timeout=45)
-        response.raise_for_status()
-        distribution_format_to_rdf_format = {
-            "json-ld": "jsonld",
-            "json_ld": "jsonld",
-            "rdf_n_triples": "nt",
-            "rdf_turtle": "ttl",
-            "rdf_n_quads": "nq",
-            "rdf_trig": "trig",
-            "rdf_xml": "rdf"
-        }
-        NKOD_FILE_FORMAT_PREFIX = "http://publications.europa.eu/resource/authority/file-type/"
-
-        graph_format = distribution.format.lower().replace(NKOD_FILE_FORMAT_PREFIX, "")
-        if distribution_format_to_rdf_format[graph_format] == "json-ld":
-            distribution_data = json.dumps(json.loads(response.text))
-        else:
-            distribution_data = response.text
-        
-        fname = "distribution"
-        with open(os.path.join(dir_path, f"{fname}.{self.format_to_extension_distribution.get(graph_format)}"), 'w', encoding='utf-8') as f:
-            f.write(distribution_data)

@@ -411,7 +411,7 @@ nkod_openai_files_user = {
 }
 
 
-nkod_shacl_user = {
+nkod_shacl_system = {
     "gpt-5": """
     You are an expert in RDF, SPARQL query generation, and ontology modeling.
     Given one or more SHACL schemas in Turtle format and a natural language query, generate a valid SPARQL query.
@@ -419,7 +419,7 @@ nkod_shacl_user = {
 }
 
 
-nkod_shacl_system = {
+nkod_shacl_user = {
     "gpt-5": """
     You are an expert in Semantic Web technologies, RDF, OWL ontologies, and SPARQL query generation. 
     Use only classes and properties defined the schema(s).
@@ -444,7 +444,7 @@ nkod_shacl_system = {
     do not include them in the SPARQL query
     - Assume that some of the properties might not appear in data we are querying, keep the the number of attributes you include as low as possible
     - If you see some $ref values with links, resolve them if needed to answer the user's question
-    
+
     Generate the SPARQL query to answer the user's question.
     Be as concise as possible.
     
@@ -466,6 +466,45 @@ nkod_shacl_system = {
     """
 }
 
+
+"""
+Example:
+    Question: “Které aktuality mají v příloze obrázek?”
+    SPARQL query:
+    ```sparql
+    PREFIX ofn: <https://ofn.gov.cz/aktuality/2020-07-01/#>
+    SELECT ?aktualita ?nazev ?image
+    WHERE {{
+        ?aktualita a ofn:Aktualita ;
+                    ofn:nazev ?nazevNode ;
+                    ofn:příloha ?priloha .
+        ?nazevNode ofn:cs ?nazev .
+        ?priloha ofn:typ_média ?media ;
+                ofn:url ?image .
+
+        FILTER(CONTAINS(STR(?media), "image"))
+}}
+    ```
+"""
+
+
+"""
+Question: “Počet starobních žádostí za každý měsíc.”
+    SPARQL query:
+    ```sparql
+    PREFIX qb: <http://purl.org/linked-data/cube#>  
+    PREFIX cssz-dim: <https://data.cssz.cz/ontology/dimension/>
+    PREFIX cssz-measure: <https://data.cssz.cz/ontology/measure/>
+
+    SELECT ?obs ?datum ?pocet_starobni
+    WHERE {{
+       ?obs a qb:Observation ;
+       cssz-dim:datum ?datum ;
+       cssz-measure:dosle-zadosti-starobni ?pocet_starobni .
+    }}
+    ORDER BY ?datum
+    ```
+"""
 
 
 

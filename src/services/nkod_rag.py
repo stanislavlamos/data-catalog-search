@@ -36,7 +36,7 @@ class NkodRAG:
 
         print(f"Used distributions: {distributions}")
 
-        return sparql_query.content, distributions
+        return sparql_query.content[0]["text"], distributions
 
     def format_schemas_for_prompt(self, schemas: list[list[tuple[str, str]]]) -> str:
         schemas_str = ""

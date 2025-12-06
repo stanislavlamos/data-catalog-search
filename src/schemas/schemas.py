@@ -61,16 +61,9 @@ class DatasetSelectionOutput(BaseModel):
 
 
 class NkodDistribution(BaseModel):
+    dataset_uri: str | None = Field(None, description="URI of the dataset")
     distribution: str | None = Field(None, description="URI of the distribution")
     format: str | None = Field(None, description="Format of the distribution")
     downloadURL: str | None = Field(None, description="Download URL of the distribution")
     accessURL: str | None = Field(None, description="Access URL of the distribution")
     conformsTo: str | None = Field(None, description="Conformance information of the distribution")
-
-
-class NkodTemporalMetadata(BaseModel):
-    dataset: str | None = Field(None, description="URI of the dataset")
-    startDate: str | None = Field(None, description="Start date of the dataset")
-    endDate: str | None = Field(None, description="End date of the dataset")
-    agentCs: str | None = Field(None, description="Publisher of the dataset in Czech")
-    agentEn: str | None = Field(None, description="Publisher of the dataset in English")

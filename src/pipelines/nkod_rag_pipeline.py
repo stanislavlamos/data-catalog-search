@@ -24,6 +24,8 @@ class NkodRagPipeline:
         nkod_rag = NkodRAG()
         distributions = [self.nkod_data_processor.get_dataset_distributions(dataset_uri, self.graph_db) for dataset_uri in self.dataset_uris]
         sparql_query, distributions = nkod_rag.generate_sparql_query(self.query, distributions, self.llm_provider, self.model_name, self.nkod_data_processor, self.dataset_uris, self.language, self.sq_lite, self.graph_db)
+        print(sparql_query)
+        print(type(sparql_query))
         sparql_query = delete_sparql_backticks(sparql_query)
 
         try:
