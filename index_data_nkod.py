@@ -13,12 +13,11 @@ class IndexDataNkod:
 
     CATALOG_NAME = "nkod"
 
-    def index_data(self) -> None:
+    def index_data_from_scratch(self) -> None:
         nkod_data_processor = NkodDataProcessor(self.CATALOG_NAME)
         nkod_data_downloader = NkodDataDownloader(nkod_data_processor)
         sq_lite = SqLite(nkod_data_processor.metadata_sql_path)
         self._download_and_preprocess_nkod_metadata(nkod_data_processor, sq_lite, nkod_data_downloader)
-        #self._index_nkod_metadata(nkod_data_processor, sq_lite)
 
     def _download_and_preprocess_nkod_metadata(self, nkod_data_processor: NkodDataProcessor, sq_lite: SqLite, nkod_data_downloader: NkodDataDownloader) -> None:
         graph_db = GraphDb(nkod_data_processor.catalog_name)
@@ -33,21 +32,25 @@ class IndexDataNkod:
         nkod_data_processor.create_ofn_dataset()
         nkod_data_processor.create_distributions_csv(graph_db)
         nkod_data_downloader.download_nkod_data()
-
-        # Call JavaScript script to expand JSON-LD files (instructions in README)
+    
+    def remove_unexpandable_data(self):
+        nkod_data_processor = NkodDataProcessor(self.CATALOG_NAME)
+        nkod_data_downloader = NkodDataDownloader(nkod_data_processor)
         nkod_data_downloader.remove_unexpandable_data()
+    
+    def create_sqls(self):
+        nkod_data_processor = NkodDataProcessor(self.CATALOG_NAME)
+        sq_lite = SqLite(nkod_data_processor.metadata_sql_path)
+        nkod_data_processor.create_metadata_sql(sq_lite)
+        nkod_data_processor.create_ofn_dataset_sql(sq_lite)
+        nkod_data_processor.create_themes_sql(sq_lite)
 
-        #nkod_data_processor.create_metadata_sql(sq_lite)
-        #nkod_data_processor.create_ofn_dataset_sql(sq_lite)
-        #nkod_data_processor.create_themes_sql(sq_lite)
+    def index_nkod_metadata(self):
+        nkod_data_processor = NkodDataProcessor(self.CATALOG_NAME)
+        sq_lite = SqLite(nkod_data_processor.metadata_sql_path)
 
-    def _index_nkod_metadata(self, nkod_data_processor: NkodDataProcessor, sq_lite: SqLite) -> None:
         openai_embeddings = OpenAIEmbeddingProvider(model_name="text-embedding-3-large", dimensions=1536)
         chroma_db = ChromaDb(nkod_data_processor.vectordb_path)
         nkod_data_processor.index_catalog_themes(sq_lite, openai_embeddings, chroma_db)
         nkod_data_processor.index_catalog_metadata(sq_lite, openai_embeddings, chroma_db)
         print(f"ChromaDB collections: {chroma_db.list_collections()}")
-
-
-if __name__ == "__main__":
-    IndexDataNkod().index_data()

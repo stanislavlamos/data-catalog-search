@@ -1,15 +1,18 @@
 import os
 from pathlib import Path
 
+import pandas as pd
+
 from src.db.chroma_db import ChromaDb
 from src.models.base import BaseEmbeddingProvider, BaseLLMProvider
 from src.schemas.schemas import InputLanguage, DatasetSelectionOutput
 from src.prompts import nkod_query_matching_llm_judge_user, \
     nkod_query_matching_llm_judge_system
 from src.services.base_query_matcher import BaseQueryMatcher
+from src.services.entity_generator import EntityGenerator
 from src.services.nkod_data_processor import NkodDataProcessor
 from src.utils import get_uris_from_chroma_query, merge_chromadb_docs_with_metadatas, \
-    get_docs_and_scores_from_chroma_query, get_intersection, parse_chroma_output
+    get_docs_and_scores_from_chroma_query, get_intersection, parse_chroma_output, strip_text, to_lower
 
 
 class NkodQueryMatcher(BaseQueryMatcher):
@@ -54,29 +57,77 @@ class NkodQueryMatcher(BaseQueryMatcher):
 
         return intersection, llm_res
 
-    def get_matching_keywords(self, k: int, chroma_db: ChromaDb, nkod_data_processor: NkodDataProcessor, language: str, embedding_provider: BaseEmbeddingProvider) -> list[dict]:
+    def get_matching_keywords(self, k: int, chroma_db: ChromaDb, nkod_data_processor: NkodDataProcessor, language: str, embedding_provider: BaseEmbeddingProvider, return_df: bool = False) -> list[dict] | pd.DataFrame:
         collection_name = f"{nkod_data_processor.keywords_collection_name}_{language}"
         chroma_db.load_collection(collection_name, embedding_provider)
         similarity_search = chroma_db.similarity_search([self.query], k)
-        query_result = parse_chroma_output(similarity_search)
+        query_result = parse_chroma_output(similarity_search, "Keyword", return_df)
 
         return query_result
 
-    def get_matching_descriptions(self, k: int, chroma_db: ChromaDb, nkod_data_processor: NkodDataProcessor, language: str, embedding_provider: BaseEmbeddingProvider) -> list[dict]:
+    def get_matching_descriptions(self, k: int, chroma_db: ChromaDb, nkod_data_processor: NkodDataProcessor, language: str, embedding_provider: BaseEmbeddingProvider, return_df: bool = False) -> list[dict] | pd.DataFrame:
         collection_name = f"{nkod_data_processor.descriptions_collection_name}_{language}"
         chroma_db.load_collection(collection_name, embedding_provider)
         similarity_search = chroma_db.similarity_search([self.query], k)
-        query_result = parse_chroma_output(similarity_search)
+        query_result = parse_chroma_output(similarity_search, "Description", return_df)
 
         return query_result
 
-    def get_matching_titles(self, k: int, chroma_db: ChromaDb, nkod_data_processor: NkodDataProcessor, language: str, embedding_provider: BaseEmbeddingProvider) -> list[dict]:
+    def get_matching_titles(self, k: int, chroma_db: ChromaDb, nkod_data_processor: NkodDataProcessor, language: str, embedding_provider: BaseEmbeddingProvider, return_df: bool = False) -> list[dict] | pd.DataFrame:
         collection_name = f"{nkod_data_processor.titles_collection_name}_{language}"
         chroma_db.load_collection(collection_name, embedding_provider)
         similarity_search = chroma_db.similarity_search([self.query], k)
-        query_result = parse_chroma_output(similarity_search)
+        query_result = parse_chroma_output(similarity_search, "Title", return_df)
 
         return query_result
+    
+    def get_matching_entitities_titles(self, k: int, chroma_db: ChromaDb, nkod_data_processor: NkodDataProcessor, language: str, embedding_provider: BaseEmbeddingProvider, entity_generator: EntityGenerator, return_df: bool = True) -> list[dict] | pd.DataFrame:
+        entities = entity_generator.generate_entities(self.query)
+        out_dfs = []
+
+        for entity_dict in entities:
+            collection_name = f"{nkod_data_processor.titles_collection_name}_{language}"
+            chroma_db.load_collection(collection_name, embedding_provider)
+            similarity_search = chroma_db.similarity_search([strip_text(to_lower(entity_dict["value"]))], k)
+            query_result = parse_chroma_output(similarity_search, "Entity", return_df)
+            out_dfs.append(query_result)
+        
+        res_df = pd.concat(out_dfs, ignore_index=True)
+        df = res_df.loc[res_df.groupby("dataset_uri")["score"].idxmin()].sort_values("score", ascending=True).head(k)
+
+        return df
+
+    def get_matching_entitities_descriptions(self, k: int, chroma_db: ChromaDb, nkod_data_processor: NkodDataProcessor, language: str, embedding_provider: BaseEmbeddingProvider, entity_generator: EntityGenerator, return_df: bool = True) -> list[dict] | pd.DataFrame:
+        entities = entity_generator.generate_entities(self.query)
+        out_dfs = []
+
+        for entity_dict in entities:
+            collection_name = f"{nkod_data_processor.descriptions_collection_name}_{language}"
+            chroma_db.load_collection(collection_name, embedding_provider)
+            similarity_search = chroma_db.similarity_search([strip_text(to_lower(entity_dict["value"]))], k)
+            query_result = parse_chroma_output(similarity_search, "Entity", return_df)
+            out_dfs.append(query_result)
+        
+        res_df = pd.concat(out_dfs, ignore_index=True)
+        df = res_df.loc[res_df.groupby("dataset_uri")["score"].idxmin()].sort_values("score", ascending=True).head(k)
+
+        return df
+    
+    def get_matching_entitities_keywords(self, k: int, chroma_db: ChromaDb, nkod_data_processor: NkodDataProcessor, language: str, embedding_provider: BaseEmbeddingProvider, entity_generator: EntityGenerator, return_df: bool = True) -> list[dict] | pd.DataFrame:
+        entities = entity_generator.generate_entities(self.query)
+        out_dfs = []
+
+        for entity_dict in entities:
+            collection_name = f"{nkod_data_processor.keywords_collection_name}_{language}"
+            chroma_db.load_collection(collection_name, embedding_provider)
+            similarity_search = chroma_db.similarity_search([strip_text(to_lower(entity_dict["value"]))], k)
+            query_result = parse_chroma_output(similarity_search, "Entity", return_df)
+            out_dfs.append(query_result)
+        
+        res_df = pd.concat(out_dfs, ignore_index=True)
+        df = res_df.loc[res_df.groupby("dataset_uri")["score"].idxmin()].sort_values("score", ascending=True).head(k)
+
+        return df
 
     def get_matching_theme_labels(self, k: int, chroma_db: ChromaDb, nkod_data_processor: NkodDataProcessor, language: str, embedding_provider: BaseEmbeddingProvider, with_scores: bool = False) -> list[str] | tuple[list[str], list[tuple[float, str]]]:
         collection_name = f"{nkod_data_processor.themes_labels_collection_name}_{language}"

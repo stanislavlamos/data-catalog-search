@@ -99,7 +99,7 @@ class NkodDataDownloader:
                     shutil.rmtree(directory_path)
                     extracted_paths.append(directory_path)
                     cur_dir_name = directory_path.split('/')[-1]
-                    metadata_df = metadata_df[~dir_name_from_uri(metadata_df['dataset_uri']) == cur_dir_name]
+                    metadata_df = metadata_df[metadata_df['dataset_uri'].apply(dir_name_from_uri) != cur_dir_name]
         
         metadata_df.to_csv(self.nkod_data_processor.ofn_metadata_csv_path, index=False)
         os.remove(fpath)

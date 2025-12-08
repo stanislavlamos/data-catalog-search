@@ -1,8 +1,12 @@
 install:
 	pip install -r requirements.txt --break-system-packages
 
-index:
-	python index_data_nkod.py
+index_build:
+	python -c "from index_data_nkod import IndexDataNkod; IndexDataNkod().create_sqls()"
+	python -c "from index_data_nkod import IndexDataNkod; IndexDataNkod().index_nkod_metadata()"
+
+generate_properties:
+	python -c "from src.services.property_generator import PropertyGenerator; PropertyGenerator().generate_properties()"	
 
 start_fe:
 	streamlit run app.py
@@ -10,16 +14,18 @@ start_fe:
 start_be:
 	uvicorn main:app --reload
 
-setup:
+setup_build:
 	mkdir -p ./data/nkod/tmp
-	mkodir -p ./data/nkod/distributions
+	mkdir -p ./data/nkod/distributions
 	find ./data/nkod -type d -name "*-*" -exec rm -r {} +
 	rm -f ./data/nkod/chroma.sqlite3
 	rm -f ./data/nkod/chroma.sqlite3-journal
 	rm -f ./data/nkod/nkod_metadata.db
 	rm -f ./data/nkod/nkod_themes.db
 	make install
-	make index
+	make index_build
+
+#setup from scratch - TODO
 
 clean_openai_files:
 	python -c "from src.services.cleaner import clean_openai_files; clean_openai_files()"
@@ -33,7 +39,12 @@ clean_distributions_dir:
 clean_openai_vector_stores:
 	python -c "from src.services.cleaner import clean_openai_vector_store; clean_openai_vector_store()"
 
+clean_named_graphs_graphdb:
+	python -c "from src.services.cleaner import clean_named_graphs_in_graphdb; clean_named_graphs_in_graphdb()"
+
 create_env:
 	rm -rf data_catalog_env
 	python -m venv data_catalog_env
-	
+
+archive_build:
+	zip -9r ofn_build.zip data/nkod/nkod_themes.csv data/nkod/nkod_publishers.csv data/nkod/nkod_ofn_metadata.csv data/nkod/nkod_metadata.trig data/nkod/nkod_metadata.csv data/nkod/nkod_distributions.csv data/nkod/nkod_distributions_queried.csv data/nkod/nkod_datasets.csv data/nkod/distributions/

@@ -10,7 +10,7 @@ import time
 
 
 class OpenAILLMProvider(BaseLLMProvider):
-    def __init__(self, model_name: str, temperature: float = 1.0):
+    def __init__(self, model_name: str, temperature: float = 0.0):
         load_dotenv()
         self.temperature = temperature
         self.model_name = model_name
@@ -25,8 +25,8 @@ class OpenAILLMProvider(BaseLLMProvider):
             print(f"Elapsed time: {end - start:.4f} seconds")
             return self.chat_vector_store(user_prompt, system_prompt, file_ids)
         
-        reasoning = {"effort": "low"}
-        llm = ChatOpenAI(model=self.model_name, temperature=self.temperature, reasoning=reasoning)
+        reasoning = {"reasoning": {"effort": "low"}} if self.model_name in ["gpt-5", "gpt-5-mini"] else {}
+        llm = ChatOpenAI(model=self.model_name, temperature=self.temperature, **reasoning)
         if structured_output is not None:
             llm = llm.with_structured_output(structured_output)
 

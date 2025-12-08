@@ -19,6 +19,6 @@ class EmbeddingProviderHandler:
         if provider_name == "anthropic":
             raise ValueError(f"Unsupported provider: {provider_name}")#return AnthropicEmbeddingProvider(model_name)
         elif provider_name == "openai":
-            return OpenAIEmbeddingProvider(model_name="text-embedding-3-large", dimensions=1536)
+            return OpenAIEmbeddingProvider(model_name="text-embedding-3-large", dimensions=None)
         else:
             raise ValueError(f"Unsupported provider: {provider_name}")

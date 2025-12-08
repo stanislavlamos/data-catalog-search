@@ -16,7 +16,7 @@ source data_catalog_env/bin/activate
 
 3. Install dependencies
 ```shell
-make setup
+make setup_build
 ```
 
 4. Start BE app

@@ -19,10 +19,10 @@ from ..sql_queries import get_keywords_czech_nkod, get_keywords_english_nkod, ge
     get_descriptions_english_nkod, get_titles_english_nkod, get_titles_czech_nkod, get_themes_labels_english_nkod, \
     get_themes_labels_czech_nkod, get_themes_definitions_czech_nkod, get_themes_definitions_english_nkod, \
     get_titles_from_uri_czech_nkod, get_titles_from_uri_english_nkod
-from ..utils import split_keywords_sql_output, print_keywords_stats, \
+from ..utils import split_descs_cs_sql_output, split_descs_en_sql_output, split_keywords_cs_sql_output, split_keywords_en_sql_output, print_keywords_stats, \
     print_titles_stats, print_descs_stats, prepare_nkod_keywords_for_chromadb, batch_list, \
-    split_themes_sql_output, prepare_nkod_themes_properties_for_chromadb, \
-    split_descs_sql_output, split_titles_sql_output, prepare_nkod_descs_for_chromadb, prepare_nkod_titles_for_chromadb, intersect_dataframes
+    split_themes_sql_output, prepare_nkod_themes_properties_for_chromadb, split_titles_cs_sql_output, split_titles_en_sql_output, \
+    prepare_nkod_descs_for_chromadb, prepare_nkod_titles_for_chromadb, intersect_dataframes
 
 
 class NkodDataProcessor(BaseDataProcessor):
@@ -50,6 +50,7 @@ class NkodDataProcessor(BaseDataProcessor):
         self.ofn_metadata_csv_path = os.path.join(self.data_path, "nkod_ofn_metadata.csv")
         self.allowed_ofns = ['turistické cíle', 'aktuality', 'události', 'sportoviště', 'sběrné dvory', 'úřední deska', 'úřední desky']
         self.distribution_download_location = os.path.join(self.data_path, "distributions")
+        self.trig_metadata_named_graph_iri = "nkod-trig-graph"
 
         self.sql_columns_metadata = [
             "dataset_uri",
@@ -137,11 +138,11 @@ class NkodDataProcessor(BaseDataProcessor):
 
     def _index_keywords(self, sq_lite: SqLite, embedding_provider: BaseEmbeddingProvider, chroma_db: ChromaDb, language: str = "cs", verbose: bool = False) -> None:
         if language == "cs":
-            result = sq_lite.query_data(get_keywords_czech_nkod, {"table_name": self.metadata_sql_table_name})
+            result = sq_lite.query_data(get_keywords_czech_nkod, {"table_name": self.ofn_dataset_sql_table_name})
         else: # language == "en"
-            result = sq_lite.query_data(get_keywords_english_nkod, {"table_name": self.metadata_sql_table_name})
+            result = sq_lite.query_data(get_keywords_english_nkod, {"table_name": self.ofn_dataset_sql_table_name})
 
-        split_sql = split_keywords_sql_output(result, f"keywords_{language}")
+        split_sql = split_keywords_cs_sql_output(result) if language == "cs" else split_keywords_en_sql_output(result)
         texts, ids, metadatas = prepare_nkod_keywords_for_chromadb(split_sql, f"keywords_{language}")
         num_batches = math.ceil(len(texts) / self.BATCH_SIZE)
         batched_texts = batch_list(texts, self.BATCH_SIZE)
@@ -157,11 +158,11 @@ class NkodDataProcessor(BaseDataProcessor):
 
     def _index_descriptions(self, sq_lite: SqLite, embedding_provider: BaseEmbeddingProvider, chroma_db: ChromaDb, language: str = "cs", verbose: bool = False) -> None:
         if language == "cs":
-            result = sq_lite.query_data(get_descriptions_czech_nkod, {"table_name": self.metadata_sql_table_name})
+            result = sq_lite.query_data(get_descriptions_czech_nkod, {"table_name": self.ofn_dataset_sql_table_name})
         else: # language == "en"
-            result = sq_lite.query_data(get_descriptions_english_nkod, {"table_name": self.metadata_sql_table_name})
+            result = sq_lite.query_data(get_descriptions_english_nkod, {"table_name": self.ofn_dataset_sql_table_name})
 
-        split_sql = split_descs_sql_output(result, f"description_{language}")
+        split_sql = split_descs_cs_sql_output(result) if language == "cs" else split_descs_en_sql_output(result)
         texts, ids, metadatas = prepare_nkod_descs_for_chromadb(split_sql, f"description_{language}")
         num_batches = math.ceil(len(texts) / self.BATCH_SIZE)
         batched_texts = batch_list(texts, self.BATCH_SIZE)
@@ -177,11 +178,11 @@ class NkodDataProcessor(BaseDataProcessor):
 
     def _index_titles(self, sq_lite: SqLite, embedding_provider: BaseEmbeddingProvider, chroma_db: ChromaDb, language: str = "cs", verbose: bool = False) -> None:
         if language == "cs":
-            result = sq_lite.query_data(get_titles_czech_nkod, {"table_name": self.metadata_sql_table_name})
+            result = sq_lite.query_data(get_titles_czech_nkod, {"table_name": self.ofn_dataset_sql_table_name})
         else:  # language == "en"
-            result = sq_lite.query_data(get_titles_english_nkod, {"table_name": self.metadata_sql_table_name})
+            result = sq_lite.query_data(get_titles_english_nkod, {"table_name": self.ofn_dataset_sql_table_name})
 
-        split_sql = split_titles_sql_output(result, f"title_{language}")
+        split_sql = split_titles_cs_sql_output(result) if language == "cs" else split_titles_en_sql_output(result)
         texts, ids, metadatas = prepare_nkod_titles_for_chromadb(split_sql, f"title_{language}")
         num_batches = math.ceil(len(texts) / self.BATCH_SIZE)
         batched_texts = batch_list(texts, self.BATCH_SIZE)
@@ -335,7 +336,7 @@ class NkodDataProcessor(BaseDataProcessor):
         print(f"Created SQL table '{self.themes_sql_table_name}' in {self.metadata_sql_path}")
 
     def create_ofn_dataset_sql(self, sq_lite: SqLite):
-        sq_lite.create_table(self.ofn_dataset_sql_table_name, self.sql_columns_metadata+['publisher_en', 'publisher_cs'])
+        sq_lite.create_table(self.ofn_dataset_sql_table_name, self.sql_columns_metadata+['publisher_en', 'publisher_cs', 'matched_substring'])
         sq_lite.insert_data_from_csv(self.ofn_dataset_sql_table_name, self.ofn_metadata_csv_path)
 
         print(f"Created SQL table '{self.ofn_dataset_sql_table_name}' in {self.metadata_sql_path}")
@@ -471,16 +472,11 @@ class NkodDataProcessor(BaseDataProcessor):
     def enrich_metadata_with_publisher(self):
         nkod_metadata_large_df = pd.read_csv(self.metadata_csv_path)
         nkod_publishers_df = pd.read_csv(self.publishers_csv_path)
-
-
         metadata_uris = set(nkod_metadata_large_df['dataset_uri'])
         publisher_uris = set(nkod_publishers_df['dataset_uri'])
 
 
-        # 2. Find the difference: URIs in metadata_uris but NOT in publisher_uris.
         uris_in_metadata_only = metadata_uris - publisher_uris
-
-        # 3. Convert the resulting set back to a list.
         result_uris = list(uris_in_metadata_only)
 
         print("--- ✅ Dataset URIs found in nkod_metadata_large_df but NOT in nkod_publishers_df ---\n")

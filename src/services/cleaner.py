@@ -3,6 +3,8 @@ import os
 from dotenv import load_dotenv
 import shutil
 from pathlib import Path
+from src.db.graph_db import GraphDb
+from src.sparql_queries import drop_named_graphs_graphdb
 
 
 load_dotenv()
@@ -40,4 +42,10 @@ def clean_openai_vector_store():
 
     for store in stores:
         client.vector_stores.delete(store.id)
-        print(f"Deleted vector store: {store.name or store.id}")
+        print(f"Deleted vector store: {store.name or store.id}.")
+
+def clean_named_graphs_in_graphdb(catalog_name: str = "nkod"):
+    graph_db = GraphDb(catalog_name)
+    res = graph_db.update_sparql_graphdb(drop_named_graphs_graphdb)
+
+    print("Deleted named graphs in GraphDb repository.")

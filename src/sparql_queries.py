@@ -294,3 +294,39 @@ WHERE {
   OPTIONAL { ?distribution dct:conformsTo ?conformsTo . }
 }
 """
+
+
+drop_named_graphs_graphdb = """
+DROP NAMED
+"""
+
+
+get_distinct_named_graphs_graphdb = """
+SELECT DISTINCT ?g
+WHERE {
+  GRAPH ?g {
+    ?s ?p ?o
+  }
+}
+"""
+
+get_all_timeframes_graphdb = """
+PREFIX dcat: <http://www.w3.org/ns/dcat#>
+PREFIX dct:  <http://purl.org/dc/terms/>
+
+SELECT ?dataset ?startDate ?endDate
+FROM <http://example.org/nkod-trig-graph>
+WHERE {
+  ?dataset a dcat:Dataset .
+
+  OPTIONAL {
+    # The temporal node is always: datasetURI + "/časové-pokrytí"
+    BIND( IRI(CONCAT(STR(?dataset), "/časové-pokrytí")) AS ?temporal )
+
+    ?temporal a dct:PeriodOfTime .
+
+    OPTIONAL { ?temporal dcat:startDate ?startDate . }
+    OPTIONAL { ?temporal dcat:endDate   ?endDate . }
+  }
+}
+"""

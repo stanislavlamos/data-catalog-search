@@ -22,6 +22,8 @@ class NkodGraphSparql:
         titles_str = "\n".join(titles)
         publishers_str = "\n".join(publishers)
 
+        print(self._generate_graph_relationships(processed_datasets))
+
         if not self.include_entities:
             sparql_query = llm_provider.chat(
                 user_prompt=nkod_graph_sparql_user[model_name],

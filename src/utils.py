@@ -41,56 +41,159 @@ def clean_text(txt: str) -> str:
     return cleaned_txt
 
 
-def split_keywords_sql_output(sql_output: list, properties_key: str) -> list[dict]:
+def split_keywords_cs_sql_output(sql_output: list) -> list[dict]:
     split_output = []
-
-    for dataset_uri, item, dataset_title, has_rdf_distribution in sql_output:
-        properties = []
-        if item is not None:
-            properties = item.split(';_; ')
-        split_output.append(
-            {
-                "dataset_uri": dataset_uri,
-                properties_key: properties,
-                "dataset_title": dataset_title,
-                "has_rdf_distribution": has_rdf_distribution
-            }
-        )
-
-    return split_output
-
-
-def split_descs_sql_output(sql_output: list, properties_key: str) -> list[dict]:
-    split_output = []
-
-    for dataset_uri, desc, dataset_title, has_rdf_distribution in sql_output:
-        if desc is not None and len(desc) != 0:
+    
+    for dataset_uri,title_cs,title_en,description_cs,description_en,keywords_cs,keywords_en,themes,has_rdf_distribution,publisher_en,publisher_cs,matched_substring in sql_output:
+        if keywords_cs is not None and len(keywords_cs) != 0:
+            properties = keywords_cs.split(';_; ')
+            keywords_en = "None" if keywords_en is None else keywords_en.split(';_; ')
             split_output.append(
                 {
                     "dataset_uri": dataset_uri,
-                    properties_key: desc,
-                    "dataset_title": dataset_title,
-                    "has_rdf_distribution": has_rdf_distribution
+                    "title_cs": title_cs,
+                    "title_en": title_en,
+                    "description_cs": description_cs,
+                    "description_en": description_en,
+                    "keywords_cs": properties,
+                    "keywords_en": keywords_en,
+                    "themes": themes,
+                    "has_rdf_distribution": has_rdf_distribution,
+                    "publisher_en": publisher_en,
+                    "publisher_cs": publisher_cs,
+                    "matched_substring": matched_substring
                 }
             )
 
     return split_output
 
 
-def split_titles_sql_output(sql_output: list, properties_key: str) -> list[dict]:
+def split_keywords_en_sql_output(sql_output: list) -> list[dict]:
     split_output = []
-
-    for dataset_uri, desc, has_rdf_distribution in sql_output:
-        if desc is not None and len(desc) != 0:
+    
+    for dataset_uri,title_cs,title_en,description_cs,description_en,keywords_cs,keywords_en,themes,has_rdf_distribution,publisher_en,publisher_cs,matched_substring in sql_output:
+        if keywords_en is not None and len(keywords_en) != 0:
+            properties = keywords_en.split(';_; ')
+            keywords_cs = "None" if keywords_cs is None else keywords_cs.split(';_; ')
             split_output.append(
                 {
                     "dataset_uri": dataset_uri,
-                    properties_key: desc,
-                    "has_rdf_distribution": has_rdf_distribution
+                    "title_cs": title_cs,
+                    "title_en": title_en,
+                    "description_cs": description_cs,
+                    "description_en": description_en,
+                    "keywords_cs": keywords_cs,
+                    "keywords_en": properties,
+                    "themes": themes,
+                    "has_rdf_distribution": has_rdf_distribution,
+                    "publisher_en": publisher_en,
+                    "publisher_cs": publisher_cs,
+                    "matched_substring": matched_substring
                 }
             )
 
     return split_output
+
+
+def split_descs_cs_sql_output(sql_output: list) -> list[dict]:
+    split_output = []
+
+    for dataset_uri,title_cs,title_en,description_cs,description_en,keywords_cs,keywords_en,themes,has_rdf_distribution,publisher_en,publisher_cs,matched_substring in sql_output:
+        if description_cs is not None and len(description_cs) != 0:
+            split_output.append(
+                {
+                    "dataset_uri": dataset_uri,
+                    "title_cs": title_cs,
+                    "title_en": title_en,
+                    "description_cs": description_cs,
+                    "description_en": description_en,
+                    "keywords_cs": keywords_cs,
+                    "keywords_en": keywords_en,
+                    "themes": themes,
+                    "has_rdf_distribution": has_rdf_distribution,
+                    "publisher_en": publisher_en,
+                    "publisher_cs": publisher_cs,
+                    "matched_substring": matched_substring
+                }
+            )
+
+    return split_output
+
+
+def split_descs_en_sql_output(sql_output: list) -> list[dict]:
+    split_output = []
+
+    for dataset_uri,title_cs,title_en,description_cs,description_en,keywords_cs,keywords_en,themes,has_rdf_distribution,publisher_en,publisher_cs,matched_substring in sql_output:
+        if description_en is not None and len(description_en) != 0:
+            split_output.append(
+                {
+                    "dataset_uri": dataset_uri,
+                    "title_cs": title_cs,
+                    "title_en": title_en,
+                    "description_cs": description_cs,
+                    "description_en": description_en,
+                    "keywords_cs": keywords_cs,
+                    "keywords_en": keywords_en,
+                    "themes": themes,
+                    "has_rdf_distribution": has_rdf_distribution,
+                    "publisher_en": publisher_en,
+                    "publisher_cs": publisher_cs,
+                    "matched_substring": matched_substring
+                }
+            )
+
+    return split_output
+
+
+def split_titles_cs_sql_output(sql_output: list) -> list[dict]:
+    split_output = []
+
+    for dataset_uri,title_cs,title_en,description_cs,description_en,keywords_cs,keywords_en,themes,has_rdf_distribution,publisher_en,publisher_cs,matched_substring in sql_output:
+        if title_cs is not None and len(title_cs) != 0:
+            split_output.append(
+                {
+                    "dataset_uri": dataset_uri,
+                    "title_cs": title_cs,
+                    "title_en": title_en,
+                    "description_cs": description_cs,
+                    "description_en": description_en,
+                    "keywords_cs": keywords_cs,
+                    "keywords_en": keywords_en,
+                    "themes": themes,
+                    "has_rdf_distribution": has_rdf_distribution,
+                    "publisher_en": publisher_en,
+                    "publisher_cs": publisher_cs,
+                    "matched_substring": matched_substring
+                }
+            )
+
+    return split_output
+
+
+def split_titles_en_sql_output(sql_output: list) -> list[dict]:
+    split_output = []
+
+    for dataset_uri,title_cs,title_en,description_cs,description_en,keywords_cs,keywords_en,themes,has_rdf_distribution,publisher_en,publisher_cs,matched_substring in sql_output:
+        if title_en is not None and len(title_en) != 0:
+            split_output.append(
+                {
+                    "dataset_uri": dataset_uri,
+                    "title_cs": title_cs,
+                    "title_en": title_en,
+                    "description_cs": description_cs,
+                    "description_en": description_en,
+                    "keywords_cs": keywords_cs,
+                    "keywords_en": keywords_en,
+                    "themes": themes,
+                    "has_rdf_distribution": has_rdf_distribution,
+                    "publisher_en": publisher_en,
+                    "publisher_cs": publisher_cs,
+                    "matched_substring": matched_substring
+                }
+            )
+
+    return split_output
+
 
 def split_themes_sql_output(sql_output: list, properties_key: str) -> list[dict]:
     split_output = []
@@ -135,7 +238,20 @@ def prepare_nkod_keywords_for_chromadb(keywords_from_sql: list[dict], properties
     ids = []
 
     for idx, item in enumerate(keywords_from_sql):
-        metadata = {"dataset_uri": item["dataset_uri"], "dataset_title": str(item["dataset_title"]), "has_rdf_distribution": item["has_rdf_distribution"]}
+        metadata = {
+            "dataset_uri": item.get("dataset_uri", "None") if item.get("dataset_uri", "None") is not None else "None",
+            "title_cs": item.get("title_cs", "None") if item.get("title_cs", "None")  is not None else "None",
+            "title_en": item.get("title_en", "None") if item.get("title_en", "None") is not None else "None",
+            "description_cs": item.get("description_cs", "None") if item.get("description_cs", "None") is not None else "None",
+            "description_en": item.get("description_en", "None") if item.get("description_en", "None") is not None else "None",
+            "keywords_cs": ';_; '.join(item["keywords_cs"]) if ';_; '.join(item.get("keywords_cs", "None")) is not None else "None",
+            "keywords_en": ';_; '.join(item["keywords_en"]) if ';_; '.join(item.get("keywords_en", "None")) is not None else "None",
+            "themes": item.get("themes", "None") if item.get("themes", "None") is not None else "None",
+            "has_rdf_distribution": item.get("has_rdf_distribution", "None") if item.get("has_rdf_distribution", "None") is not None else "None",
+            "publisher_en": item.get("publisher_en", "None") if item.get("publisher_en", "None") is not None else "None",
+            "publisher_cs": item.get("publisher_cs", "None") if item.get("publisher_cs", "None") is not None else "None",
+            "matched_substring": item.get("matched_substring", "None") if item.get("matched_substring", "None") is not None else "None"
+        }
         keywords = [strip_text(to_lower(kw)) for kw in item[properties_key]]
 
         if len(keywords) == 0:
@@ -146,7 +262,7 @@ def prepare_nkod_keywords_for_chromadb(keywords_from_sql: list[dict], properties
         texts.extend(keywords)
         metadatas.extend(cur_metadatas)
         ids.extend(cur_ids)
-
+    
     return texts, ids, metadatas
 
 
@@ -156,7 +272,20 @@ def prepare_nkod_descs_for_chromadb(sql_output: list[dict], properties_key: str)
     ids = []
 
     for idx, item in enumerate(sql_output):
-        metadata = {"dataset_uri": item["dataset_uri"], "dataset_title": str(item["dataset_title"]), "has_rdf_distribution": item["has_rdf_distribution"]}
+        metadata = {
+            "dataset_uri": item.get("dataset_uri", "None") if item.get("dataset_uri", "None") is not None else "None",
+            "title_cs": item.get("title_cs", "None") if item.get("title_cs", "None")  is not None else "None",
+            "title_en": item.get("title_en", "None") if item.get("title_en", "None") is not None else "None",
+            "description_cs": item.get("description_cs", "None") if item.get("description_cs", "None") is not None else "None",
+            "description_en": item.get("description_en", "None") if item.get("description_en", "None") is not None else "None",
+            "keywords_cs": item.get("keywords_cs", "None") if item.get("keywords_cs", "None") is not None else "None",
+            "keywords_en": item.get("keywords_en", "None") if item.get("keywords_en", "None") is not None else "None",
+            "themes": item.get("themes", "None") if item.get("themes", "None") is not None else "None",
+            "has_rdf_distribution": item.get("has_rdf_distribution", "None") if item.get("has_rdf_distribution", "None") is not None else "None",
+            "publisher_en": item.get("publisher_en", "None") if item.get("publisher_en", "None") is not None else "None",
+            "publisher_cs": item.get("publisher_cs", "None") if item.get("publisher_cs", "None") is not None else "None",
+            "matched_substring": item.get("matched_substring", "None") if item.get("matched_substring", "None") is not None else "None"
+        }
         text = strip_text(to_lower(item[properties_key]))
         cur_id = f"id_item_{idx}"
         texts.append(text)
@@ -172,7 +301,20 @@ def prepare_nkod_titles_for_chromadb(sql_output: list[dict], properties_key: str
     ids = []
 
     for idx, item in enumerate(sql_output):
-        metadata = {"dataset_uri": item["dataset_uri"], "dataset_title": str(item[properties_key]), "has_rdf_distribution": item["has_rdf_distribution"]}
+        metadata = {
+            "dataset_uri": item.get("dataset_uri", "None") if item.get("dataset_uri", "None") is not None else "None",
+            "title_cs": item.get("title_cs", "None") if item.get("title_cs", "None")  is not None else "None",
+            "title_en": item.get("title_en", "None") if item.get("title_en", "None") is not None else "None",
+            "description_cs": item.get("description_cs", "None") if item.get("description_cs", "None") is not None else "None",
+            "description_en": item.get("description_en", "None") if item.get("description_en", "None") is not None else "None",
+            "keywords_cs": item.get("keywords_cs", "None") if item.get("keywords_cs", "None") is not None else "None",
+            "keywords_en": item.get("keywords_en", "None") if item.get("keywords_en", "None") is not None else "None",
+            "themes": item.get("themes", "None") if item.get("themes", "None") is not None else "None",
+            "has_rdf_distribution": item.get("has_rdf_distribution", "None") if item.get("has_rdf_distribution", "None") is not None else "None",
+            "publisher_en": item.get("publisher_en", "None") if item.get("publisher_en", "None") is not None else "None",
+            "publisher_cs": item.get("publisher_cs", "None") if item.get("publisher_cs", "None") is not None else "None",
+            "matched_substring": item.get("matched_substring", "None") if item.get("matched_substring", "None") is not None else "None"
+        }
         text = strip_text(to_lower(item[properties_key]))
         cur_id = f"id_item_{idx}"
         texts.append(text)
@@ -247,7 +389,7 @@ def split_dataset_creation_sql_output(sql_output: list, language: str) -> list[d
 
     return split_output
 
-def parse_chroma_output(query_result: dict[str, list[list[dict]]]) -> list[dict]:
+def parse_chroma_output(query_result: dict[str, list[list[dict]]], matched_on: str, return_df: bool = False) -> list[dict] | pd.DataFrame:
     docs = query_result["documents"][0]
     metadatas = query_result["metadatas"][0]
     scores = query_result["distances"][0]
@@ -256,7 +398,11 @@ def parse_chroma_output(query_result: dict[str, list[list[dict]]]) -> list[dict]
     for doc, metadata_dict, score in zip(docs, metadatas, scores):
         metadata_dict["score"] = score
         metadata_dict["doc"] = doc
+        metadata_dict["matched_on"] = matched_on
         output.append(metadata_dict)
+
+    if return_df:
+        return pd.DataFrame(output)
 
     return output
 
@@ -346,7 +492,6 @@ def dir_name_from_uri(dataset_uri: str) -> str:
 
 def encode_graphdb_statements(statement: str) -> str:
     return urllib.parse.quote(statement, safe='')
-
 
 def create_named_graph_uri(graph_iri: str):
     return f"http://example.org/{graph_iri}"

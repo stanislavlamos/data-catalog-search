@@ -150,10 +150,11 @@ nkod_query_matching_llm_judge_system = {
     "gpt-5": """
     You are an advanced dataset recommender.
     You will be given a user query and a list of candidate datasets (Doc + URI).
-    Your task is to rerank the datasets that based on how they reflect the user query.
+    Your task is to rerank all the datasets based on how they reflect the user query.
     Consider relevance, coverage, and complementarity of the Doc field to the query from the user.
     Rank the selected datasets from most relevant to least relevant.
     Return in the provided structured format.
+    Always return all the datasets you received on the input
     Do not change the URIs or Docs.
     """
 }
@@ -162,19 +163,22 @@ nkod_query_matching_llm_judge_system = {
 nkod_query_matching_llm_judge_user = {
     "gpt-5": """
     You are given a user query describing the datasets they need, and a list of candidate datasets with Doc and URIs.
+    
+    Your task is to rerank the datasets based on how they satisfy the user's query.
+    - Consider relevance, coverage, and complementarity.
+    - Rank all input datasets from most relevant to least relevant.
+    - Assign a relevance_score between 0 (irrelevant) and 1 (perfectly relevant).
+    - Use the Doc field for the reranking with respect to user's query.
+    - Always return all the datasets you received on the input.
+    
+    Return the output in the provided structured format.
+    Return all {n_datasets} datasets you received on the input.
 
     User Query:
     {user_query}
     
     Candidate Datasets:
     {datasets}
-    
-    Your task is to rerank the datasets based on how they satisfy the user's query.
-    - Consider relevance, coverage, and complementarity.
-    - Rank datasets from most relevant to least relevant.
-    - Assign a relevance_score between 0 (irrelevant) and 1 (perfectly relevant).
-    
-    Return the output in the provided structured format.
     """
 }
 

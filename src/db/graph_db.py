@@ -1,6 +1,9 @@
+import traceback
 import requests
 from SPARQLWrapper import SPARQLWrapper, JSON
 from dotenv import load_dotenv
+import os
+import re
 
 
 load_dotenv()
@@ -8,23 +11,16 @@ load_dotenv()
 class GraphDb:
 
     GRAPHDB_URL_LOCAL = "http://localhost:7200/repositories"
-    GRAPHDB_URL_REMOTE = "http://osw.felk.cvut.cz:7200/repositories/lamossta"
+    GRAPHDB_NAMED_GRAPH_TEMPLATE = "http%3A%2F%2Fexample.org%2F{}"
+    GRAPHDB_NAMED_GRAPH_TEMPLATE_FROM = "<http://example.org/{}>"
 
     def __init__(self, catalog_name: str):
         self.repo_name = f"{catalog_name}_repo"
+        self.GRAPHDB_USERNAME = os.getenv("GRAPH_DB_USER")
+        self.GRAPHDB_PASSWORD = os.getenv("GRAPH_DB_PASSWORD")
+        self.GRAPHDB_URL_REMOTE = os.getenv("GRAPH_DB_REPO")
+        self.GRAPHDB_URL_REMOTE_UPDATE = os.getenv("GRAPH_DB_REPO_UPDATE")
 
-    def query_sparql(self, query: str, file_path: str):
-        repo_url = f"{self.GRAPHDB_URL_LOCAL}/{self.repo_name}"
-
-        response = requests.post(
-            repo_url,
-            data=query,
-            headers={"Content-Type": "application/sparql-query",
-                     "Accept": "application/sparql-results+json"}
-        )
-
-        return response.json()
-    
     def query_test_local_repo(self, query: str):
         repo_url = f"{self.GRAPHDB_URL_LOCAL}/nkod-test-repo"
 
@@ -47,46 +43,147 @@ class GraphDb:
 
         return results
 
-    def add_new_namegraph(self, graph_iri: str, fpath: str, format: str):
+    def add_new_namegraph_graphdb_remote(self, graph_iri: str, fpath: str, content_type: str):
+        named_graph = self.GRAPHDB_NAMED_GRAPH_TEMPLATE.format(graph_iri)
+        api_url = f"{self.GRAPHDB_URL_REMOTE}/rdf-graphs/service?graph={named_graph}"
+        
         with open(fpath, 'rb') as f:
             data = f.read()
-        
 
         headers = {
-            "Content-Type": "text/turtle" 
+            "Content-Type": content_type 
         }
-        
-        print(f"Attempting to load data into graph: {NAMED_GRAPH} at {api_url}")
-        
-        try:
+
+        if self.GRAPHDB_USERNAME is not None and self.GRAPHDB_PASSWORD is not None:
             response = requests.post(
                 api_url,
                 data=data,
                 headers=headers,
-                auth=(GRAPHDB_USERNAME, GRAPHDB_PASSWORD) # Basic Authentication
+                auth=(self.GRAPHDB_USERNAME, self.GRAPHDB_PASSWORD)
+            )
+        else:
+            response = requests.post(
+                api_url,
+                data=data,
+                headers=headers
             )
 
-            if response.status_code == 204:
-                # 204 No Content is the standard success code for this operation
-                print("✅ Success: Data loaded successfully into the named graph!")
-            else:
-                print(f"❌ API Error: Status code {response.status_code}")
-                print(f"Response text: {response.text}")
-                
-        except requests.exceptions.RequestException as e:
-            print(f"Fatal connection error: {e}")
+        correct_status_code = 204
+        if response.status_code != correct_status_code:
+            print(f"❌ API Error: Status code {response.status_code}, named graph: {named_graph}")
+            print(f"Response text: {response.text}")
         
-    def push_trig_to_repo(self, file_path: str) -> None:
-        rdf_endpoint = f"{self.GRAPHDB_URL_LOCAL}/{self.repo_name}/statements"
-
-        with open(file_path, "rb") as f:
-            data = f.read()
-
+    def push_trig_to_graphdb_remote(self, file_path: str, graph_iri: str = "nkod-trig-graph") -> None:
+        self.add_new_namegraph_graphdb_remote(
+            graph_iri="nkod-trig-graph",
+            fpath=file_path,
+            content_type="application/trig"
+        )
+    
+    def query_sparql_graphdb(self, query: str, named_graph_iris: list[str] | None = None) -> tuple[str | None, str | None]:
+        """"
+        Returns (error, query_result)
+        """
+        if named_graph_iris is not None:
+            query = self.add_from_to_sparql(query, named_graph_iris)
+        
+        api_url = self.GRAPHDB_URL_REMOTE
         headers = {
-            "Content-Type": "application/x-trig",
-            'Accept': 'application/json'
+            "Accept": "application/sparql-results+json",
+            "Content-Type": "application/sparql-query",
         }
+    
+        try:
+            if self.GRAPHDB_USERNAME is not None and self.GRAPHDB_PASSWORD is not None:
+                response = requests.post(
+                    api_url,
+                    data=query,   
+                    headers=headers,
+                    auth=(self.GRAPHDB_USERNAME, self.GRAPHDB_PASSWORD)
+                )
+            else:
+                response = requests.post(
+                    api_url,
+                    data=query,   
+                    headers=headers,
+                )
 
-        response = requests.put(rdf_endpoint, headers=headers, data=data)
+            correct_code = 200
+            if response.status_code == correct_code:
+                return (None, response.json())
 
+            return (response.text, None)
 
+        except Exception as e:
+            err = traceback.format_exc()
+            return (err, None)
+    
+    def update_sparql_graphdb(self, query: str, named_graph_iris: list[str] | None = None) -> tuple[str | None, str | None]:
+        """"
+        Returns (error, query_result)
+        """
+        if named_graph_iris is not None:
+            query = self.add_from_to_sparql(query, named_graph_iris)
+
+        api_url = self.GRAPHDB_URL_REMOTE_UPDATE
+        headers = {
+            "Accept": "application/sparql-results+json",
+            "Content-Type": "application/sparql-update",
+        }
+    
+        try:
+            if self.GRAPHDB_USERNAME is not None and self.GRAPHDB_PASSWORD is not None:
+                response = requests.post(
+                    api_url,
+                    data=query,   
+                    headers=headers,
+                    auth=(self.GRAPHDB_USERNAME, self.GRAPHDB_PASSWORD)
+                )
+            else:
+                response = requests.post(
+                    api_url,
+                    data=query,   
+                    headers=headers,
+                )
+
+            correct_code = 200
+            if response.status_code == correct_code:
+                return (None, response.text)
+
+            return (None, response.text)
+
+        except Exception as e:
+            err = traceback.format_exc()
+            return (err, None)
+    
+    def add_from_to_sparql(self, query: str, named_graph_iris: list[str]) -> str:
+        query_with_from_template = self.insert_from_clause_after_select(query)
+        from_clauses = [f"FROM {self.GRAPHDB_NAMED_GRAPH_TEMPLATE_FROM.format(iri)}" for iri in named_graph_iris]
+        from_clauses = '\n'.join(from_clauses)
+        query_with_from = query_with_from_template.format(**({"FROM_CLAUSE": from_clauses}))
+
+        return query_with_from
+
+    def insert_from_clause_after_select(self, query_string: str, clause_to_insert: str = "{FROM_CLAUSE}"):
+        query_string = query_string.replace('{', '{{').replace('}', '}}')
+        normalized_query = re.sub(r'\s+', ' ', query_string).strip()
+        pattern = r'(.*?)(SELECT\s+.*?)\s+WHERE\s*\{'
+        match = re.search(pattern, normalized_query, re.IGNORECASE)
+        
+        if match:
+            prefix_part = match.group(1).strip()
+            select_part = match.group(2).strip()
+            where_match = re.search(r'WHERE\s*\{', normalized_query[match.end(2):], re.IGNORECASE)
+
+            if where_match:
+                where_start_index = match.end(2) + where_match.start()
+                
+                transformed_query = (
+                    f"{prefix_part}\n"  
+                    f"{select_part}\n"  
+                    f"{clause_to_insert}\n"  
+                    f"{normalized_query[where_start_index:]}"
+                )
+                return transformed_query
+            
+        return query_string
