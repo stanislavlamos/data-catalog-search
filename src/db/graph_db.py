@@ -87,6 +87,8 @@ class GraphDb:
         if named_graph_iris is not None:
             query = self.add_from_to_sparql(query, named_graph_iris)
         
+        #print(f"query with from: {query}")
+        
         api_url = self.GRAPHDB_URL_REMOTE
         headers = {
             "Accept": "application/sparql-results+json",
@@ -108,14 +110,21 @@ class GraphDb:
                     headers=headers,
                 )
 
+            #print(f"response from graphdb: {response}")
+
             correct_code = 200
+
+            #print(f"response code: {response.status_code}")
             if response.status_code == correct_code:
+                #print(f"response json: {response.json()}")
                 return (None, response.json())
 
+            #print(f"text response: {response.text}")
             return (response.text, None)
 
         except Exception as e:
             err = traceback.format_exc()
+            #print(f"exception: {err}")
             return (err, None)
     
     def update_sparql_graphdb(self, query: str, named_graph_iris: list[str] | None = None) -> tuple[str | None, str | None]:

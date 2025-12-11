@@ -35,6 +35,7 @@ class NkodDataProcessor(BaseDataProcessor):
     URIS_TO_SKIP = "https://data.gov.cz/zdroj/podněty-na-data-k-otevření/"
     DCAT_THEMES_URL = "http://publications.europa.eu/resource/authority/data-theme"
     NKOD_FILE_FORMAT_PREFIX = "http://publications.europa.eu/resource/authority/file-type/"
+    NKOD_ERROR_LOOP_RETRIES = 5
 
     def __init__(self, catalog_name: str, metadata_fname: str = "nkod_metadata.trig", distributions_fname: str = "nkod_distributions.csv", datasets_fname: str = "nkod_datasets.csv"):
         super().__init__(catalog_name, metadata_fname, distributions_fname, datasets_fname)

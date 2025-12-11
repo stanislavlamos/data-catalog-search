@@ -1,0 +1,18 @@
+[
+    {
+      "question": "Počet turistických cílů rozdělených podle toho, zda mají uvedené informace o vstupném (Admission).",
+      "sparql_query": "SELECT (COUNT(?id) AS ?pocetCilu) ?máVstupné\nWHERE {\n  ?id a <http://schema.org/TouristAttraction> .\n  OPTIONAL {\n    ?id <https://slovník.gov.cz/generický/veřejná-místa/pojem/má-vstupné> ?vstupnéInfo .\n  }\n  BIND(bound(?vstupnéInfo) AS ?máVstupné)\n}\nGROUP BY ?máVstupné"
+    },
+    {
+        "question": "Názvy turistických cílů, které v popisu (popisce) obsahují slovo 'rybník'.",
+        "sparql_query": "SELECT ?title\nWHERE {\n  ?id a <http://schema.org/TouristAttraction> ;\n    <http://purl.org/dc/terms/title> ?title ;\n    <http://purl.org/dc/terms/description> ?description .\n  FILTER(lang(?title) = 'cs') .\n  FILTER(contains(?description, 'rybník'))\n}"
+    },
+    {
+        "question": "Celkový počet turistických cílů v datasetu.",
+        "sparql_query": "SELECT (COUNT(?id) AS ?pocetCilu)\nWHERE {\n  ?id a <http://schema.org/TouristAttraction> .\n}"
+    },
+    {
+        "question": "Seznam turistických cílů s popisem a jejich GPS souřadnicemi (zeměpisná délka a šířka).",
+        "sparql_query": "SELECT ?title ?description ?lon ?lat\nWHERE {\n  ?id a <http://schema.org/TouristAttraction> ;\n    <http://purl.org/dc/terms/title> ?title ;\n    <http://purl.org/dc/terms/description> ?description ;\n    <http://www.w3.org/ns/locn#geometry> [\n      <https://purl.org/geojson/vocab#coordinates> ( ?lon ?lat )\n    ] .\n  FILTER(lang(?title) = 'cs') .\n  FILTER(lang(?description) = 'cs')\n}"
+    }
+]

@@ -1,0 +1,17 @@
+[
+    {
+        "question": "Kolik sportovišť má typ „jiné“?",
+        "sparql_query": "SELECT (COUNT(?sportoviste) AS ?pocetJinych)\nWHERE {\n  ?sportoviste <https://slovník.gov.cz/datový/sportoviště/pojem/má-typ-sportoviště> <https://data.mvcr.gov.cz/zdroj/číselníky/typy-sportovišť/položky/jiné> .\n}"
+    },
+    {
+        "question": "Vyber názvy všech sportovišť (jen české).",
+        "sparql_query": "SELECT ?sportoviste ?nazev\nWHERE {\n  ?sportoviste a <http://schema.org/SportsActivityLocation> ;\n                <http://purl.org/dc/terms/title> ?nazev .\n  FILTER(lang(?nazev) = \"cs\")\n}"
+    },
+    {
+        "query": "Jaká je průměrná cena vstupného pro jednotlivé typy vstupu (např.: 'Hodina', 'Jednorázový vstup' atd...)?",
+        "sparql_query": "PREFIX schema: <http://schema.org/>\nPREFIX vm: <https://slovník.gov.cz/generický/veřejná-místa/pojem/>\nPREFIX dct: <http://purl.org/dc/terms/>\nPREFIX gr: <http://purl.org/goodrelations/v1#>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\n\nSELECT ?feeTitle (AVG(xsd:double(?priceValue)) AS ?averagePrice)\nWHERE {\n  ?location a schema:SportsActivityLocation ;\n            vm:má-vstupné ?fee .\n  ?fee dct:title ?feeTitle ;\n       gr:hasPriceSpecification ?priceSpec .\n  ?priceSpec gr:hasCurrencyValue ?priceValue .\n}\nGROUP BY ?feeTitle\nORDER BY DESC(?averagePrice)"},
+    {
+        "query": "Jaká sportoviště obsahují ve svém názvu slovo 'rybník'?",
+        "sparql_query": "PREFIX dct: <http://purl.org/dc/terms/>\nPREFIX schema: <http://schema.org/>\n\nSELECT ?locationName\nWHERE {\n  ?location a schema:SportsActivityLocation ;\n            dct:title ?locationName .\n  FILTER regex(STR(?locationName), \"rybník\", \"i\")\n}"
+    }
+]

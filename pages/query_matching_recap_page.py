@@ -5,6 +5,7 @@ from src.fe_handler import generate_sparql
 st.title("📊 Query Matching Recap")
 st.markdown("Review your query configuration and selected datasets")
 st.markdown("---")
+print(st.session_state.selected_datasets)
 
 st.subheader("Query Configuration")
 config_col1, config_col2 = st.columns(2)
@@ -89,7 +90,7 @@ else:
     with st.container(height=400):
         for idx, dataset in enumerate(st.session_state.selected_datasets, 1):
             with st.container(border=True):
-                st.markdown(f"<p class='recap-dataset-title'>{idx}. {dataset['dataset_title']}</p>", unsafe_allow_html=True)
+                st.markdown(f"<p class='recap-dataset-title'>{idx}. {dataset['title_cs']}</p>", unsafe_allow_html=True)
                 st.markdown(f"<p class='recap-dataset-uri'>URI: <a href='{dataset['dataset_uri']}' target='_blank'>{dataset['dataset_uri']}</a></p>", unsafe_allow_html=True)
 
                 has_rdf = dataset.get('has_rdf_distribution', False)
@@ -112,7 +113,7 @@ with col2:
         st.session_state.next_page = 'sparql_generation'
         st.session_state.loading_msg = "Generating SPARQL queries..."
         st.session_state.fnc_to_call = generate_sparql
-        dataset_uris = [ds['dataset_uri'] for ds in st.session_state.selected_datasets]
+        dataset_uris = [ds for ds in st.session_state.selected_datasets]
         st.session_state.params_for_fnc = {
             "query": st.session_state.config.get('query'),
             "model_name": st.session_state.config.get('model_name'),

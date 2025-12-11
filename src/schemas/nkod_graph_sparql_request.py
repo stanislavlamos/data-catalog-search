@@ -3,7 +3,7 @@ from pydantic import BaseModel
 
 class NkodGraphSparqlRequest(BaseModel):
     query: str
-    dataset_uris: list[str]
+    matched_lst_dict: list[dict]
     provider_name: str = "openai"
     model_name: str
     language: str

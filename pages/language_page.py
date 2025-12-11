@@ -15,7 +15,16 @@ language_to_print = {
 
 st.title("Language Detection")
 st.write("Detected language of your input query")
-st.write(f"**Detected Language:** {language_to_print[st.session_state.result.get('text')]}")
+print(st.session_state)
+try:
+    language_to_show = language_to_print[st.session_state.result.get('text')]
+except:
+    if st.session_state.selected_language is not None:
+        language_to_show = language_to_print[st.session_state.selected_language]
+    else:
+        language_to_show = "None"
+
+st.write(f"**Detected Language:** {language_to_show}")
 st.markdown("---")
 
 change_lang = st.selectbox("Do you wish to change the detected language?", ["No", "Yes"], key="change_lang_select")

@@ -92,7 +92,6 @@ class NkodQueryMatcherPipeline:
             for i, batch in enumerate(batched_df)
         ]
         
-        print("started")
         results = {}
         with ThreadPoolExecutor(max_workers=len(tasks)) as executor:
             future_to_name = {

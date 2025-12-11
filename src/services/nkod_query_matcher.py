@@ -92,9 +92,11 @@ class NkodQueryMatcher(BaseQueryMatcher):
             query_result = parse_chroma_output(similarity_search, "Entity", return_df)
             out_dfs.append(query_result)
         
+        if not entities:
+            return pd.DataFrame()
+        
         res_df = pd.concat(out_dfs, ignore_index=True)
         df = res_df.loc[res_df.groupby("dataset_uri")["score"].idxmin()].sort_values("score", ascending=True).head(k)
-
         return df
 
     def get_matching_entitities_descriptions(self, k: int, chroma_db: ChromaDb, nkod_data_processor: NkodDataProcessor, language: str, embedding_provider: BaseEmbeddingProvider, entity_generator: EntityGenerator, return_df: bool = True) -> list[dict] | pd.DataFrame:
@@ -108,9 +110,11 @@ class NkodQueryMatcher(BaseQueryMatcher):
             query_result = parse_chroma_output(similarity_search, "Entity", return_df)
             out_dfs.append(query_result)
         
+        if not entities:
+            return pd.DataFrame()
+        
         res_df = pd.concat(out_dfs, ignore_index=True)
         df = res_df.loc[res_df.groupby("dataset_uri")["score"].idxmin()].sort_values("score", ascending=True).head(k)
-
         return df
     
     def get_matching_entitities_keywords(self, k: int, chroma_db: ChromaDb, nkod_data_processor: NkodDataProcessor, language: str, embedding_provider: BaseEmbeddingProvider, entity_generator: EntityGenerator, return_df: bool = True) -> list[dict] | pd.DataFrame:
@@ -124,9 +128,11 @@ class NkodQueryMatcher(BaseQueryMatcher):
             query_result = parse_chroma_output(similarity_search, "Entity", return_df)
             out_dfs.append(query_result)
         
+        if not entities:
+            return pd.DataFrame()
+        
         res_df = pd.concat(out_dfs, ignore_index=True)
         df = res_df.loc[res_df.groupby("dataset_uri")["score"].idxmin()].sort_values("score", ascending=True).head(k)
-
         return df
 
     def get_matching_theme_labels(self, k: int, chroma_db: ChromaDb, nkod_data_processor: NkodDataProcessor, language: str, embedding_provider: BaseEmbeddingProvider, with_scores: bool = False) -> list[str] | tuple[list[str], list[tuple[float, str]]]:

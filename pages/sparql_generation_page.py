@@ -46,14 +46,14 @@ st.markdown("""
 if 'upvotes' not in st.session_state:
     st.session_state.upvotes = {}
 
-datasets_per_row = 3
+datasets_per_row = 4
 rag_data = st.session_state.result.get("rag")
 graph_sparql_data = st.session_state.result.get("graph_sparql")
 openai_files_data = st.session_state.result.get("openai_files")
 shacl_data = st.session_state.result.get("shacl")
 
 def render_dataset_columns(selected_datasets):
-    for row_idx in range(0, 3, datasets_per_row):
+    for row_idx in range(0, 4, datasets_per_row):
         datasets_chunk = selected_datasets[row_idx:row_idx + datasets_per_row]
         cols = st.columns(len(datasets_chunk))
 

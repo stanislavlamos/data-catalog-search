@@ -1,0 +1,17 @@
+[
+    {
+      "question": "Jaký je plán svozu odpadu v roce 2025?",
+      "sparql_query": "\nPREFIX dc: <http://purl.org/dc/terms/>\nPREFIX schema: <http://schema.org/>\nSELECT ?title ?description\nWHERE {\n  ?s dc:title ?title .\n  ?s dc:description ?description .\n  FILTER (CONTAINS(LCASE(?title), LCASE(\"svozu odpadu\")) && CONTAINS(LCASE(?title), LCASE(\"2025\")))\n}\n"
+    },
+    {
+      "question": "Najdi zprávy o výsledcích voleb.",
+      "sparql_query": "\nPREFIX dc: <http://purl.org/dc/terms/>\nPREFIX schema: <http://schema.org/>\nSELECT ?title ?description\nWHERE {\n  ?s dc:title ?title .\n  ?s dc:description ?description .\n  FILTER (CONTAINS(LCASE(?title), LCASE(\"voleb\")) || CONTAINS(LCASE(?description), LCASE(\"voleb\")))\n}\n"
+    },
+    {
+      "question": "Kolik celkem zpráv (článků) bylo publikováno na portálu města Horšovský Týn?",
+      "sparql_query": "PREFIX schema: <http://schema.org/>\n\nSELECT (COUNT(?article) AS ?totalArticles)\nWHERE {\n  ?article a schema:NewsArticle .\n}"
+    },
+    {
+      "question_cs": "Kolik příloh má každá zpráva a jaký je její název?",
+      "sparql_query": "PREFIX schema: <http://schema.org/>\nPREFIX dcterms: <http://purl.org/dc/terms/>\nPREFIX vpoj: <https://slovník.gov.cz/generický/věci/pojem/>\n\nSELECT ?articleTitle (COUNT(?attachment) AS ?attachmentCount)\nWHERE {\n  ?article a schema:NewsArticle .\n  ?article dcterms:title ?articleTitleLiteral .\n  FILTER(LANG(?articleTitleLiteral) = \"cs\")\n  BIND(STR(?articleTitleLiteral) AS ?articleTitle)\n  \n  ?article vpoj:má-přílohu ?attachment .\n}\nGROUP BY ?articleTitle\nORDER BY DESC(?attachmentCount)"    }
+]

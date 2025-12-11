@@ -1,0 +1,16 @@
+[
+    {
+      "question": "Jaké kontaktní údaje (email, telefon, URL) jsou dostupné pro sběrný dvůr?",
+      "sparql_query": "SELECT ?email ?telefon ?url \nWHERE { \n  <https://www.smjh.cz/cs/sberny-dvur-odpadu.html> <https://slovník.gov.cz/generický/veřejná-místa/pojem/má-kontakt> ?kontakt . \n  OPTIONAL { \n    ?kontakt <http://www.w3.org/2006/vcard/ns#hasEmail> ?email . \n  } . \n  OPTIONAL { \n    ?kontakt <http://www.w3.org/2006/vcard/ns#hasTelephone> ?telefon . \n  } . \n  OPTIONAL { \n    ?kontakt <http://www.w3.org/2006/vcard/ns#hasURL> ?url . \n  } \n}"    },
+    {
+      "question": "Kolik různých typů otevírací doby je definováno pro sběrný dvůr?",
+      "sparql_query": "SELECT (COUNT(?oteviraci_doba) AS ?pocet_typu_oteviraci_doby) \nWHERE { \n  <https://www.smjh.cz/cs/sberny-dvur-odpadu.html> <https://slovník.gov.cz/generický/veřejná-místa/pojem/má-otevírací-dobu> ?oteviraci_doba . \n}"
+    },
+    {
+      "question": "Které dny v týdnu platí pro 'Letní otevírací doba v pracovní dny'?",
+      "sparql_query": "SELECT ?den_v_tydnu \nWHERE { \n  <https://www.smjh.cz/cs/sberny-dvur-odpadu.html> <https://slovník.gov.cz/generický/veřejná-místa/pojem/má-otevírací-dobu> ?oteviraci_doba . \n  ?oteviraci_doba <http://purl.org/dc/terms/title> \"Letní otevírací doba v pracovní dny\"@cs . \n  ?oteviraci_doba <https://slovník.gov.cz/generický/čas/pojem/má-den-v-týdnu> ?den_v_tydnu . \n}"    },
+    {
+      "question": "Jaké jsou různé časové intervaly (od-do) otevírací doby (v hodinách) a kolikrát se každý interval opakuje?",
+      "sparql_query": "SELECT ?od_cas ?do_cas (COUNT(*) AS ?pocet) \nWHERE { \n  <https://www.smjh.cz/cs/sberny-dvur-odpadu.html> <https://slovník.gov.cz/generický/veřejná-místa/pojem/má-otevírací-dobu> ?oteviraci_doba . \n  ?oteviraci_doba <https://slovník.gov.cz/generický/čas/pojem/má-časovou-dobu> ?casova_doba . \n  ?casova_doba <https://slovník.gov.cz/generický/čas/pojem/od> ?od . \n  ?od \"@value\" ?od_cas . \n  ?casova_doba <https://slovník.gov.cz/generický/čas/pojem/do> ?do . \n  ?do \"@value\" ?do_cas . \n} \nGROUP BY ?od_cas ?do_cas"
+    }
+]

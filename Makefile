@@ -8,8 +8,14 @@ index_build:
 generate_properties:
 	python -c "from src.services.property_generator import PropertyGenerator; PropertyGenerator().generate_properties()"	
 
+generate_few_shots:
+	python -c "from src.services.few_shot_generator import FewShotGenerator; FewShotGenerator().generate_few_shots()"
+
 start_fe:
 	streamlit run app.py
+
+alter_matched_substring_df_column:
+		python -c "from src.services.few_shot_generator import FewShotGenerator; FewShotGenerator().alter_matched_substring_df_column()"
 
 start_be:
 	uvicorn main:app --reload
@@ -25,7 +31,8 @@ setup_build:
 	make install
 	make index_build
 
-#setup from scratch - TODO
+jsonld_to_txt:
+	python -c "from src.services.jsonld_to_txt import JsonldToTxt; JsonldToTxt().generate()"	
 
 clean_openai_files:
 	python -c "from src.services.cleaner import clean_openai_files; clean_openai_files()"

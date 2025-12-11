@@ -55,5 +55,5 @@ get_titles_from_uri_english_nkod = """
 """
 
 get_all_datasets_nkod = """
-    SELECT dataset_uri, title_cs, has_rdf_distribution FROM {table_name}
+    SELECT dataset_uri,title_cs,title_en,description_cs,description_en,keywords_cs,keywords_en,themes,has_rdf_distribution,publisher_en,publisher_cs,matched_substring FROM {table_name}
 """

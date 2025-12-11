@@ -1,0 +1,18 @@
+[
+    {
+        "question": "Které události jsou koncerty a konají se v prosinci 2025?",
+        "sparql_query": "PREFIX schema: <http://schema.org/>\nPREFIX terms: <http://purl.org/dc/terms/>\nPREFIX time: <http://www.w3.org/2006/time#>\n\nSELECT DISTINCT ?title ?date\nWHERE {\n  ?event a schema:Event .\n  ?event terms:title ?title .\n  FILTER (LANG(?title) = \"cs\" && CONTAINS(LCASE(?title), \"koncert\"))\n  ?event schema:openingHoursSpecification ?schedule .\n  ?schedule <https://slovník.gov.cz/generický/čas/pojem/má-časový-interval> ?interval .\n  ?interval time:hasBeginning ?startInstant .\n  OPTIONAL { ?startInstant time:inXSDDateTimeStamp ?startDateTime . BIND(STR(?startDateTime) AS ?date) . }\n  OPTIONAL { ?startInstant time:inXSDDate ?startDate . BIND(STR(?startDate) AS ?date) . }\n  FILTER (BOUND(?date) && (STRSTARTS(?date, \"2025-12\")))\n}"
+    },
+    {
+        "question": "Jaké události jsou spojeny se skautingem?",
+        "sparql_query": "PREFIX schema: <http://schema.org/>\nPREFIX terms: <http://purl.org/dc/terms/>\n\nSELECT ?title\nWHERE {\n  ?event a schema:Event .\n  ?event terms:title ?title .\n  FILTER (LANG(?title) = \"cs\" && CONTAINS(LCASE(?title), \"skautingu\"))\n}"
+    },
+    {
+        "question": "Kolik unikátních událostí se koná v každém kalendářním roce (seskupeno podle roku)?",
+        "sparql_query": "PREFIX schema: <http://schema.org/>\nPREFIX time: <http://www.w3.org/2006/time#>\nPREFIX skg: <https://slovník.gov.cz/generický/čas/pojem/>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\n\nSELECT ?rok (COUNT(DISTINCT ?event) AS ?pocet_udalosti)\nWHERE {\n  ?event a schema:Event .\n  ?event schema:openingHoursSpecification ?spec .\n  ?spec skg:má-časový-interval ?interval .\n  ?interval time:hasBeginning ?startInstant .\n  ?startInstant time:inXSDDateTimeStamp ?dateTimeLiteral .\n  \n  # Extrakce roku z data a převedení na celé číslo\n  BIND(xsd:integer(SUBSTR(STR(?dateTimeLiteral), 1, 4)) AS ?rok)\n}\nGROUP BY ?rok\nORDER BY ?rok"
+    },
+    {
+        "question": "Kolik událostí (eventů) je celkem zaznamenáno v datové sadě?",
+        "sparql_query": "PREFIX schema: <http://schema.org/>\n\nSELECT (COUNT(?event) AS ?celkovy_pocet_udalosti)\nWHERE {\n  ?event a schema:Event .\n}"
+    }
+]

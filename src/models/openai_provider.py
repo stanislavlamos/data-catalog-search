@@ -25,7 +25,7 @@ class OpenAILLMProvider(BaseLLMProvider):
             print(f"Elapsed time: {end - start:.4f} seconds")
             return self.chat_vector_store(user_prompt, system_prompt, file_ids)
         
-        reasoning = {"reasoning": {"effort": "low"}} if self.model_name in ["gpt-5", "gpt-5-mini"] else {}
+        reasoning = {"reasoning": {"effort": "minimal"}} if self.model_name in ["gpt-5", "gpt-5-mini"] else {}
         llm = ChatOpenAI(model=self.model_name, temperature=self.temperature, **reasoning)
         if structured_output is not None:
             llm = llm.with_structured_output(structured_output)
@@ -38,11 +38,11 @@ class OpenAILLMProvider(BaseLLMProvider):
         #print(f"usage metadata: {response.usage_metadata}")
 
         end = time.time()
-        print(f"Elapsed time: {end - start:.4f} seconds")
+        print(f"Elapsed time: {end - start:.4f} seconds, model: {self.model_name}")
 
         return response
     
-    def chat_vector_store(self, user_prompt: str, system_prompt: str, file_ids: str) -> str:
+    def chat_vector_store(self, user_prompt: str, system_prompt: str, file_ids: list[str]) -> str:
         client = OpenAI()
         now = datetime.now()
         vs_name = f"vs_{now.strftime('%Y-%m-%d_%H-%M-%S')}"
@@ -55,6 +55,7 @@ class OpenAILLMProvider(BaseLLMProvider):
         print("vector store created")
         response = client.responses.create(
             model=self.model_name,
+            reasoning={"effort": "low"},
             instructions=system_prompt,
             input=user_prompt,
             tools=[{

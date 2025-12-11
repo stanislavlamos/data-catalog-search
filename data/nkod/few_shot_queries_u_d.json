@@ -1,0 +1,18 @@
+[
+    {
+        "question": "Které informace na úřední desce se týkají agendy 'Dražby, exekuce' a v jakých termínech mají být relevantní?",
+        "sparql_query": "PREFIX ofn-ud: <https://slovník.gov.cz/datový/ofn-úřední-desky/pojem/>\nPREFIX dcterms: <http://purl.org/dc/terms/>\nPREFIX time: <http://www.w3.org/2006/time#>\n\nSELECT DISTINCT ?title ?relevantDoDate WHERE {\n  ?information <https://slovník.gov.cz/legislativní/sbírka/500/2004/pojem/obsahuje-informaci> ?work .\n  ?work ofn-ud:spadá-pod-agendu ?agenda .\n  ?agenda dcterms:title \"Dražby, exekuce\"@cs .\n  ?work dcterms:title ?title .\n  ?work ofn-ud:relevantní-do ?instant .\n  ?instant time:inXSDDate ?relevantDoDate .\n  FILTER (LANG(?title) = \"cs\")\n}"
+    },
+    {
+        "question": "Vyhledej všechny dokumenty, jejichž název obsahuje slovo 'Rekonstrukce' a uveď jejich datum vyvěšení.",
+        "sparql_query": "PREFIX ofn-ud: <https://slovník.gov.cz/datový/ofn-úřední-desky/pojem/>\nPREFIX dcterms: <http://purl.org/dc/terms/>\nPREFIX time: <http://www.w3.org/2006/time#>\n\nSELECT DISTINCT ?title ?vyveseniDate WHERE {\n  ?information <https://slovník.gov.cz/legislativní/sbírka/500/2004/pojem/obsahuje-informaci> ?work .\n  ?work dcterms:title ?title .\n  FILTER (CONTAINS(LCASE(STR(?title)), \"rekonstrukce\"))\n  ?work <https://slovník.gov.cz/legislativní/sbírka/500/2004/pojem/vyvěšení-informace> ?instant .\n  ?instant time:inXSDDate ?vyveseniDate .\n  FILTER (LANG(?title) = \"cs\")\n}"
+    },
+    {
+        "question": "Zobraz název a datum vyvěšení všech oznámení.",
+        "sparql_query": "PREFIX dc: <http://purl.org/dc/terms/>\nPREFIX lsk: <https://slovník.gov.cz/legislativní/sbírka/500/2004/pojem/>\nPREFIX time: <http://www.w3.org/2006/time#>\n\nSELECT ?title ?date\nWHERE {\n  ?info dc:title ?titleNode .\n  ?titleNode ?p1 ?title .\n  FILTER(LANG(?title) = \"cs\")\n  ?info lsk:vyvěšení-informace ?postingNode .\n  ?postingNode time:inXSDDate ?dateNode .\n  ?dateNode ?p2 ?date .\n}\nORDER BY DESC(?date)"
+    },
+    {
+        "question": "Počet oznámení vyvěšených v jednotlivé dny.",
+        "sparql_query": "PREFIX lsk: <https://slovník.gov.cz/legislativní/sbírka/500/2004/pojem/>\nPREFIX time: <http://www.w3.org/2006/time#>\n\nSELECT ?date (COUNT(?info) AS ?count)\nWHERE {\n  ?info lsk:vyvěšení-informace ?postingNode .\n  ?postingNode time:inXSDDate ?dateNode .\n  ?dateNode ?p ?date .\n}\nGROUP BY ?date\nORDER BY DESC(?count)"
+    }
+]

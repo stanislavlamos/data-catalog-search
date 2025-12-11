@@ -15,7 +15,7 @@ class AllDatasetsPipeline:
         return AllDatasetsResponse(all_datasets=all_datasets)
 
     def _fetch_all_datasets(self) -> list[dict]:
-        sql_response = self.sq_lite.query_data(get_all_datasets_nkod, {"table_name": self.nkod_data_processor.metadata_sql_table_name})
+        sql_response = self.sq_lite.query_data(get_all_datasets_nkod, {"table_name": self.nkod_data_processor.ofn_dataset_sql_table_name})
         datasets = self.parse_sql_response(sql_response)
 
         return datasets
@@ -23,11 +23,20 @@ class AllDatasetsPipeline:
     def parse_sql_response(self, sql_response: list[tuple[str, str, str]]) -> list[dict]:
         datasets = []
 
-        for row in sql_response:
+        for dataset_uri,title_cs,title_en,description_cs,description_en,keywords_cs,keywords_en,themes,has_rdf_distribution,publisher_en,publisher_cs,matched_substring in sql_response:
             dataset = {
-                "dataset_uri": row[0],
-                "dataset_title": row[1],
-                "has_rdf_distribution": bool(row[2])
+                "dataset_uri": dataset_uri,
+                "title_cs": title_cs,
+                "title_en": title_en,
+                "description_cs": description_cs,
+                "description_en": description_en,
+                "keywords_cs": keywords_cs,
+                "keywords_en": keywords_en,
+                "themes": themes,
+                "has_rdf_distribution": has_rdf_distribution,
+                "publisher_en": publisher_en,
+                "publisher_cs": publisher_cs,
+                "matched_substring": matched_substring
             }
             datasets.append(dataset)
         

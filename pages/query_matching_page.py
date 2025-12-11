@@ -6,9 +6,8 @@ st.markdown("Select relevant datasets that match your query criteria")
 st.markdown("---")
 
 
-matched_by_title = st.session_state.result[0]["matched_titles"]
-matched_by_desc = st.session_state.result[0]["matched_descriptions"]
-matched_by_keywords = st.session_state.result[0]["matched_keywords"]
+print(f"result: {st.session_state.result[0]}")
+matched_datasets = st.session_state.result[0]["matched_lst_dict"]
 all_datasets = st.session_state.result[1]["all_datasets"]   
 
 if "selected_datasets" not in st.session_state:
@@ -68,32 +67,27 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 
-def render_dataset_card(ds, match_type, idx, parent=None):
-    is_selected = ds['dataset_uri'] in selected_ids
+def render_card(ds, source, idx):
+    ds_id = ds["dataset_uri"]
+    is_selected = ds_id in selected_ids  # Use pre-computed set
     btn_label = "✕" if is_selected else "➕"
-    btn_help = "Remove from selection" if is_selected else "Add to selection"
-    btn_key = f"{match_type}_{ds['dataset_uri']}_{idx}"
-
-    card_class = "dataset-card selected" if is_selected else "dataset-card"
-    container_ctx = parent if parent is not None else st.container(border=True)
-    with container_ctx:
-        header_cols = st.columns([10, 1])
-        with header_cols[0]:
-            st.markdown(f"<p class='dataset-title'>{ds['dataset_title']}</p>", unsafe_allow_html=True)
-        with header_cols[1]:
-            if st.button(btn_label, key=btn_key, help=btn_help, type="secondary", use_container_width=False):
-                if is_selected:
-                    st.session_state.selected_datasets = [d for d in st.session_state.selected_datasets if d['dataset_uri'] != ds['dataset_uri']]
-                else:
-                    st.session_state.selected_datasets.append(ds)
-                st.rerun()
-        st.markdown(f"<p class='dataset-meta'><a href={ds['dataset_uri']}>{ds['dataset_uri']}</a></p>", unsafe_allow_html=True)
-        has_rdf_distribution = ds.get('has_rdf_distribution', False)
-        if has_rdf_distribution:
-            st.markdown(f"<p class='dataset-meta' style='color: green;'>RDF distribution available</p>", unsafe_allow_html=True)
-        else:
-            st.markdown(f"<p class='dataset-meta' style='color: red;'>No RDF distribution available</p>", unsafe_allow_html=True)
-
+    btn_key = f"{source}_{idx}"  # Simplified key
+    
+    cols = st.columns([10, 1])
+    with cols[0]:
+        st.markdown(f"<p class='dataset-title'>{ds['title_cs']}</p>", unsafe_allow_html=True)
+        st.markdown(f"<span class='match-badge'>Matched on: {ds.get('matched_on', 'Search')}</span>", unsafe_allow_html=True)
+        st.markdown(f"<p class='dataset-meta'>Publisher: {ds['publisher_cs']}</p>", unsafe_allow_html=True)
+        rdf_status = "rdf-available" if ds["has_rdf_distribution"] else "rdf-unavailable"
+        rdf_text = "✓ RDF available" if ds["has_rdf_distribution"] else "✗ No RDF"
+        st.markdown(f"<p class='dataset-meta {rdf_status}'>{rdf_text}</p>", unsafe_allow_html=True)
+    with cols[1]:
+        if st.button(btn_label, key=btn_key):
+            if is_selected:
+                st.session_state.selected_datasets = [x for x in st.session_state.selected_datasets if x["dataset_uri"] != ds_id]
+            else:
+                st.session_state.selected_datasets.append(ds)
+            st.rerun()
 
 # Added helper to filter datasets by query (title, description, tags)
 def filter_datasets(datasets, query: str):
@@ -104,138 +98,134 @@ def filter_datasets(datasets, query: str):
     
     out = []
     for ds in datasets:
-        if q in ds.get('dataset_title', '').lower():
+        if q in ds.get('title_cs', '').lower() or q in ds.get('publisher_cs', '').lower():
             out.append(ds)
             continue
 
     return out
 
 
-# Integrate search bar and selectable available datasets
-is_enabled = st.checkbox("Enable dataset search and selection", value=False)
+st.markdown("---")
+search_query = st.text_input(
+    "🔎 Search datasets",
+    value=st.session_state.get('search_query', ''),
+    placeholder="Search by title, description, or tags...",
+    key="search_input"
+)
 
-if is_enabled:
-    st.markdown("---")
-    search_query = st.text_input(
-        "🔎 Search datasets",
-        value=st.session_state.get('search_query', ''),
-        placeholder="Search by title, description, or tags...",
-        key="search_input"
-    )
+st.session_state.search_query = search_query
 
-    st.session_state.search_query = search_query
+st.markdown("---")
 
-    st.markdown("---")
+filtered_datasets = filter_datasets(all_datasets, search_query)
+selected_ids = [ds['dataset_uri'] for ds in st.session_state.selected_datasets]
+available_datasets = [ds for ds in filtered_datasets if ds['dataset_uri'] not in selected_ids]
 
-    filtered_datasets = filter_datasets(all_datasets, search_query)
-    selected_ids = [ds['dataset_uri'] for ds in st.session_state.selected_datasets]
-    available_datasets = [ds for ds in filtered_datasets if ds['dataset_uri'] not in selected_ids]
+st.markdown(""" 
+<style>
+    .dataset-card {
+        border: 2px solid #e5e7eb;
+        border-radius: 8px;
+        padding: 16px;
+        margin-bottom: 12px;
+        background-color: white;
+        transition: all 0.2s;
+        position: relative;
+    }
+    .dataset-card:hover {
+        border-color: #3b82f6;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    .dataset-card-selected {
+        border: 2px solid #3b82f6;
+        border-radius: 8px;
+        padding: 16px;
+        margin-bottom: 12px;
+        background-color: #eff6ff;
+        transition: all 0.2s;
+        position: relative;
+    }
+    .dataset-card-selected:hover {
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    .dataset-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 8px;
+        gap: 12px;
+    }
+    .dataset-title {
+        font-size: 16px;
+        font-weight: 600;
+        color: #111827;
+        flex: 1;
+    }
+    .dataset-description {
+        font-size: 14px;
+        color: #6b7280;
+        margin-bottom: 12px;
+        line-height: 1.5;
+    }
+    .dataset-meta {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        font-size: 12px;
+        color: #9ca3af;
+        margin-bottom: 8px;
+    }
+    .dataset-score {
+        color: #3b82f6;
+        font-weight: 600;
+    }
+    .dataset-tags {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+    }
+    .dataset-tag {
+        background-color: #f3f4f6;
+        color: #374151;
+        padding: 4px 8px;
+        border-radius: 12px;
+        font-size: 11px;
+    }
+    .scrollable-container {
+        height: 500px;
+        overflow-y: auto;
+        padding-right: 8px;
+    }
+    .scrollable-container::-webkit-scrollbar {
+        width: 8px;
+    }
+    .scrollable-container::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 4px;
+    }
+    .scrollable-container::-webkit-scrollbar-thumb {
+        background: #888;
+        border-radius: 4px;
+    }
+    .scrollable-container::-webkit-scrollbar-thumb:hover {
+        background: #555;
+    }
+    div[data-testid="column"] > div > div > div > button {
+        margin-bottom: 0 !important;
+    }
+</style>
+""", unsafe_allow_html=True)
 
-    st.markdown(""" 
-    <style>
-        .dataset-card {
-            border: 2px solid #e5e7eb;
-            border-radius: 8px;
-            padding: 16px;
-            margin-bottom: 12px;
-            background-color: white;
-            transition: all 0.2s;
-            position: relative;
-        }
-        .dataset-card:hover {
-            border-color: #3b82f6;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-        .dataset-card-selected {
-            border: 2px solid #3b82f6;
-            border-radius: 8px;
-            padding: 16px;
-            margin-bottom: 12px;
-            background-color: #eff6ff;
-            transition: all 0.2s;
-            position: relative;
-        }
-        .dataset-card-selected:hover {
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-        .dataset-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 8px;
-            gap: 12px;
-        }
-        .dataset-title {
-            font-size: 16px;
-            font-weight: 600;
-            color: #111827;
-            flex: 1;
-        }
-        .dataset-description {
-            font-size: 14px;
-            color: #6b7280;
-            margin-bottom: 12px;
-            line-height: 1.5;
-        }
-        .dataset-meta {
-            display: flex;
-            gap: 8px;
-            align-items: center;
-            font-size: 12px;
-            color: #9ca3af;
-            margin-bottom: 8px;
-        }
-        .dataset-score {
-            color: #3b82f6;
-            font-weight: 600;
-        }
-        .dataset-tags {
-            display: flex;
-            gap: 6px;
-            flex-wrap: wrap;
-        }
-        .dataset-tag {
-            background-color: #f3f4f6;
-            color: #374151;
-            padding: 4px 8px;
-            border-radius: 12px;
-            font-size: 11px;
-        }
-        .scrollable-container {
-            height: 500px;
-            overflow-y: auto;
-            padding-right: 8px;
-        }
-        .scrollable-container::-webkit-scrollbar {
-            width: 8px;
-        }
-        .scrollable-container::-webkit-scrollbar-track {
-            background: #f1f1f1;
-            border-radius: 4px;
-        }
-        .scrollable-container::-webkit-scrollbar-thumb {
-            background: #888;
-            border-radius: 4px;
-        }
-        .scrollable-container::-webkit-scrollbar-thumb:hover {
-            background: #555;
-        }
-        div[data-testid="column"] > div > div > div > button {
-            margin-bottom: 0 !important;
-        }
-    </style>
-    """, unsafe_allow_html=True)
+st.markdown(f"### Available Datasets ({len(available_datasets)})")
 
-    st.markdown(f"### Available Datasets ({len(available_datasets)})")
-
-    if len(available_datasets) == 0:
-        st.info("No datasets match your search")
-    else:
-        container = st.container(height=500)
-        with container:
-            for idx, dataset in enumerate(available_datasets):
-                # Use the shared renderer so look & behavior are consistent with other lists
-                render_dataset_card(dataset, "search", idx)
+if len(available_datasets) == 0:
+    st.info("No datasets match your search")
+else:
+    container = st.container(height=500)
+    with container:
+        for idx, dataset in enumerate(available_datasets):
+            # Use the shared renderer so look & behavior are consistent with other lists
+            render_card(dataset, "search", idx)
 
 st.markdown(f"### Selected Datasets ({len(st.session_state.selected_datasets)})")
 with st.container(height=200, border=True):
@@ -244,33 +234,18 @@ with st.container(height=200, border=True):
     else:
         max_per_row = 3
         selected = st.session_state.selected_datasets
-        for i in range(0, len(selected), max_per_row):
-            chunk = selected[i:i + max_per_row]
-            cols = st.columns(len(chunk), border=True)
-            for col, ds in zip(cols, chunk):
-                render_dataset_card(ds, "selected", i, parent=col)
+        for i, ds in enumerate(selected):
+            render_card(ds, "selected", i)
+            if i < len(selected) - 1:  # Avoid extra divider at end
+                st.divider()
 
 
 st.markdown("---")
-
-col1, col2, col3 = st.columns([1, 1, 1])
-with col1:
-    st.markdown(f"### Matched by Title")
-    with st.container(height=600):
-        for i, ds in enumerate(matched_by_title):
-            render_dataset_card(ds, "title", i)
-
-with col2:
-    st.markdown(f"### Matched by Description")
-    with st.container(height=600):
-        for i, ds in enumerate(matched_by_desc):
-            render_dataset_card(ds, "desc", i)
-
-with col3:
-    st.markdown(f"### Matched by Keywords")
-    with st.container(height=600):
-        for i, ds in enumerate(matched_by_keywords):
-            render_dataset_card(ds, "keywords", i)
+with st.container(height=400):
+    for i, ds in enumerate(matched_datasets):
+        render_card(ds, "matched", i)
+        if i < len(matched_datasets) - 1:  # Avoid extra divider at end
+            st.divider()
 
 st.markdown("---")
 

@@ -3,16 +3,12 @@ from openai import OpenAI
 from src.db.graph_db import GraphDb
 from src.db.sq_lite import SqLite
 from src.models.base import BaseLLMProvider
-from src.schemas.schemas import NkodDistribution
 from src.services.nkod_data_processor import NkodDataProcessor
 from src.services.nkod_dataset_processor import NkodDatasetProcessor
 from dotenv import load_dotenv
-import requests
-from datetime import datetime
-import json
 import os
 from src.prompts import nkod_openai_files_user, nkod_openai_files_system
-import openai
+from src.utils import dir_name_from_uri
 
 
 load_dotenv()
@@ -46,13 +42,10 @@ class NkodOpenAiFiles:
             "xml": "xml"
         }
 
-    def generate_sparql_query(self, user_query: str, orig_distributions: list[list[NkodDistribution]], llm_provider: BaseLLMProvider, model_name: str, nkod_data_processor: NkodDataProcessor, dataset_uris: list[str], language: str, sq_lite: SqLite, graph_db: GraphDb) -> tuple[str, list[NkodDistribution]]:
-        processed_datasets = self.nkod_dataset_processor.process_datasets(orig_distributions)
-        titles = self.get_dataset_titles(nkod_data_processor, sq_lite, dataset_uris, language)
-        publishers = self.get_dataset_publishers(nkod_data_processor, graph_db, dataset_uris, language)
-        titles_str = "\n".join(titles)
-        publishers_str = "\n".join(publishers)
-        files_ids = self.upload_files(processed_datasets)
+    def generate_sparql_query(self, user_query: str, matched_lst_dict: list[dict], llm_provider: BaseLLMProvider, model_name: str, nkod_data_processor: NkodDataProcessor, language: str, sq_lite: SqLite, graph_db: GraphDb) -> str:
+        titles_str = "\n".join([distribution["title_cs"] for distribution in matched_lst_dict])
+        publishers_str = "\n".join([distribution["publisher_cs"] for distribution in matched_lst_dict])
+        files_ids = self.upload_files(matched_lst_dict, nkod_data_processor)
 
         sparql_query = llm_provider.chat(
             user_prompt=nkod_openai_files_user[model_name],
@@ -65,7 +58,7 @@ class NkodOpenAiFiles:
             file_ids=files_ids
         )
         
-        return sparql_query, processed_datasets
+        return sparql_query
 
     def upload_file(self, file_path: str, purpose: str = "assistants") -> str:
         with open(file_path, "rb") as f:
@@ -76,69 +69,13 @@ class NkodOpenAiFiles:
 
         return uploaded_file.id
     
-    def upload_files(self, datasets: list[NkodDistribution]) -> list[str]:
+    def upload_files(self, matched_lst_dict: list[dict], nkod_data_processor: NkodDataProcessor) -> list[str]:
         uploaded_file_ids = []
 
-        for dataset in datasets:
-            input_filename = self.download_dataset(dataset)
-            file_id = self.upload_file(os.path.join(self.tmp_folder_path, input_filename))
+        for dataset in matched_lst_dict:
+            dir_name = dir_name_from_uri(dataset["dataset_uri"])
+            file_id = self.upload_file(os.path.join(nkod_data_processor.distribution_download_location, dir_name, "distribution_expanded.txt"))
             uploaded_file_ids.append(file_id)
 
         return uploaded_file_ids
-
-    def download_dataset(self, distribution: NkodDistribution) -> str:
-        input_file_str = requests.get(distribution.downloadURL).text
-        input_file_extension = self.get_distribution_format(distribution)
-
-        if input_file_extension is None:
-            raise ValueError("Cannot determine distribution file format.")
-
-        now = datetime.now()
-        input_filename = f"distribution_{now.strftime('%Y-%m-%d_%H-%M-%S')}.txt"
-
-        if input_file_extension == "jsonld":
-            data = json.loads(input_file_str)
-
-            with open(os.path.join(self.tmp_folder_path, input_filename), "w", encoding="utf-8") as f:
-                json.dump(data, f, ensure_ascii=False, indent=4)
-
-        else:
-            with open(os.path.join(self.tmp_folder_path, input_filename), "w", encoding="utf-8") as f:
-                f.write(input_file_str)
-        
-        return input_filename
-    
-    def download_datasets(self, datasets: list[NkodDistribution]) -> list[str]:
-        downloaded_files = []
-
-        for dataset in datasets:
-            downloaded_files.append(self.download_dataset(dataset))
-
-        return downloaded_files
-    
-    def get_distribution_format(self, distribution: NkodDistribution) -> str | None:
-        if distribution.format.startswith(self.NKOD_FILE_FORMAT_PREFIX):
-            format_key = distribution.format.replace(self.NKOD_FILE_FORMAT_PREFIX, "")
-            file_extension = self.format_to_extension_distribution.get(format_key.lower(), None)
-            return file_extension
-
-        return None
-    
-    def get_dataset_publishers(self, nkod_data_processor: NkodDataProcessor, graph_db: GraphDb, dataset_uris: list[str], language: str) -> list[str]:
-        publishers = []
-
-        for dataset_uri in dataset_uris:
-            publisher = nkod_data_processor.get_dataset_publisher(dataset_uri, graph_db, language)
-            publishers.append(publisher)
-
-        return publishers
-
-    def get_dataset_titles(self, nkod_data_processor: NkodDataProcessor, sq_lite: SqLite, dataset_uris: list[str], language: str) -> list[str]:
-        titles = []
-
-        for dataset_uri in dataset_uris:
-            title = nkod_data_processor.get_dataset_title(dataset_uri, sq_lite, language)
-            titles.append(title)
-
-        return titles
     
