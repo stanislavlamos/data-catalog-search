@@ -5,7 +5,6 @@ from src.fe_handler import generate_sparql
 st.title("📊 Query Matching Recap")
 st.markdown("Review your query configuration and selected datasets")
 st.markdown("---")
-print(st.session_state.selected_datasets)
 
 st.subheader("Query Configuration")
 config_col1, config_col2 = st.columns(2)

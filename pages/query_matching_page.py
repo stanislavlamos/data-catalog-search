@@ -6,7 +6,6 @@ st.markdown("Select relevant datasets that match your query criteria")
 st.markdown("---")
 
 
-print(f"result: {st.session_state.result[0]}")
 matched_datasets = st.session_state.result[0]["matched_lst_dict"]
 all_datasets = st.session_state.result[1]["all_datasets"]   
 
