@@ -15,17 +15,23 @@ class OpenAILLMProvider(BaseLLMProvider):
         self.temperature = temperature
         self.model_name = model_name
 
-    def chat(self, user_prompt: str, system_prompt: str, user_prompt_vars: dict | None = None, system_prompt_vars: dict | None = None, structured_output: BaseModel | None = None, file_ids: list[str] | None = None) -> str | BaseModel:
+    def chat(self, user_prompt: str, system_prompt: str, user_prompt_vars: dict | None = None, system_prompt_vars: dict | None = None, structured_output: BaseModel | None = None, file_ids: list[str] | None = None, purpose: str | None = None, vector_store_id: str | None = None) -> str | BaseModel | tuple[str | BaseModel, str]:
         user_prompt = user_prompt.format(**(user_prompt_vars or {}))
         system_prompt = system_prompt.format(**(system_prompt_vars or {}))
+
+        print(f"System: \n{system_prompt}\n\n")
+        print(f"User: \n{user_prompt}\n\n")
+
         start = time.time()
         
         if file_ids is not None:
-            end = time.time()
-            print(f"Elapsed time: {end - start:.4f} seconds")
-            return self.chat_vector_store(user_prompt, system_prompt, file_ids)
-        
-        reasoning = {"reasoning": {"effort": "minimal"}} if self.model_name in ["gpt-5", "gpt-5-mini"] else {}
+            return self.chat_vector_store(user_prompt, system_prompt, file_ids, purpose)
+
+        if vector_store_id is not None:
+            return self.resume_chat_vector_store(user_prompt, system_prompt, vector_store_id, purpose)
+
+        effort = "minimal" if purpose is not None and purpose == "NKOD_RERANKING" else "low"
+        reasoning = {"reasoning": {"effort": effort}} if self.model_name in ["gpt-5", "gpt-5-mini"] else {}
         llm = ChatOpenAI(model=self.model_name, temperature=self.temperature, **reasoning)
         if structured_output is not None:
             llm = llm.with_structured_output(structured_output)
@@ -35,17 +41,16 @@ class OpenAILLMProvider(BaseLLMProvider):
             HumanMessage(content=user_prompt)
         ]
         response = llm.invoke(messages)
-        #print(f"usage metadata: {response.usage_metadata}")
 
         end = time.time()
-        print(f"Elapsed time: {end - start:.4f} seconds, model: {self.model_name}")
-
+        print(f"Elapsed time: {end - start:.4f} seconds, model: {self.model_name}|effort: {effort}, purpose: {purpose}")
         return response
     
-    def chat_vector_store(self, user_prompt: str, system_prompt: str, file_ids: list[str]) -> str:
+    def chat_vector_store(self, user_prompt: str, system_prompt: str, file_ids: list[str], purpose: str | None = None) -> tuple[str, str]:
         client = OpenAI()
         now = datetime.now()
         vs_name = f"vs_{now.strftime('%Y-%m-%d_%H-%M-%S')}"
+        start = time.time()
         
         vector_store = client.vector_stores.create(
             name=vs_name,
@@ -64,7 +69,28 @@ class OpenAILLMProvider(BaseLLMProvider):
             }]
         )
 
-        return response.output_text
+        end = time.time()
+        print(f"Elapsed time: {end - start:.4f} seconds, model: {self.model_name}|effort: low, purpose: {purpose}")
+        return response.output_text, vector_store.id
+
+    def resume_chat_vector_store(self, user_prompt: str, system_prompt: str, vector_store_id: str, purpose: str | None = None) -> tuple[str, str]:
+        client = OpenAI()
+        start = time.time()
+
+        response = client.responses.create(
+            model=self.model_name,
+            reasoning={"effort": "low"},
+            instructions=system_prompt,
+            input=user_prompt,
+            tools=[{
+                "type": "file_search",
+                "vector_store_ids": [vector_store_id]
+            }]
+        )
+
+        end = time.time()
+        print(f"Elapsed time: {end - start:.4f} seconds, model: {self.model_name}|effort: low, purpose: {purpose}")
+        return response.output_text, vector_store_id
 
 
 class OpenAIEmbeddingProvider(BaseEmbeddingProvider):

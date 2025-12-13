@@ -35,7 +35,7 @@ class NkodDataProcessor(BaseDataProcessor):
     URIS_TO_SKIP = "https://data.gov.cz/zdroj/podněty-na-data-k-otevření/"
     DCAT_THEMES_URL = "http://publications.europa.eu/resource/authority/data-theme"
     NKOD_FILE_FORMAT_PREFIX = "http://publications.europa.eu/resource/authority/file-type/"
-    NKOD_ERROR_LOOP_RETRIES = 5
+    NKOD_ERROR_LOOP_RETRIES = 1
 
     def __init__(self, catalog_name: str, metadata_fname: str = "nkod_metadata.trig", distributions_fname: str = "nkod_distributions.csv", datasets_fname: str = "nkod_datasets.csv"):
         super().__init__(catalog_name, metadata_fname, distributions_fname, datasets_fname)
@@ -52,6 +52,7 @@ class NkodDataProcessor(BaseDataProcessor):
         self.allowed_ofns = ['turistické cíle', 'aktuality', 'události', 'sportoviště', 'sběrné dvory', 'úřední deska', 'úřední desky']
         self.distribution_download_location = os.path.join(self.data_path, "distributions")
         self.trig_metadata_named_graph_iri = "nkod-trig-graph"
+        self.vector_stores_json = os.path.join(self.data_path, "nkod_openai_vector_stores.json")
 
         self.sql_columns_metadata = [
             "dataset_uri",

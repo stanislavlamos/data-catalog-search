@@ -7,7 +7,7 @@
 {"desc": "simple query", "query": "Jaké jsou aktuality ohledně řidičáku v Horšovském Týně?", "language": "cs", "timeframe": "None", "dataset_uris": ["https://data.gov.cz/zdroj/datové-sady/00253383/1137956007"]}
 {"desc": "simple query", "query": "Jaké jsou informace ohledně kácení dřevin a kdo je oznamovatel v Klenčí pod Čerchovem?", "language": "cs", "timeframe": "None", "dataset_uris": ["https://data.gov.cz/zdroj/datové-sady/00253472/1139317508"]}
 {"desc": "simple query", "query": "Jaké události v Říčanech se týkají hudby?", "language": "cs", "timeframe": "None", "dataset_uris": ["https://data.gov.cz/zdroj/datové-sady/00240702/1425538386"]}
-{"desc": "simple query", "query": "Jaké jsou aktuality jsou vyvěšeny v minulém roce v Litoměřicích?", "language": "cs", "timeframe": "None", "dataset_uris": ["https://data.gov.cz/zdroj/datové-sady/00263958/996209831"]}
+{"desc": "simple query", "query": "Jaké aktuality byly vytvořeny v minulém roce v Lelekovicích?", "language": "cs", "timeframe": "None", "dataset_uris": ["https://data.gov.cz/zdroj/datové-sady/00281999/1137821659"]}
 {"desc": "simple query", "query": "Jaké jsou aktuality ohledně povolení staveb v Náměšťi nad Oslavou?", "language": "cs", "timeframe": "None", "dataset_uris": ["https://data.gov.cz/zdroj/datové-sady/00289965/1005988280"]}
 {"desc": "simple query", "query": "Jaké akce se konaly na Praze 11 v posledním měsíci?", "language": "cs", "timeframe": "None", "dataset_uris": ["https://data.gov.cz/zdroj/datové-sady/00231126/f210715a20053ecd0e49aa731be914d1"]}
 {"desc": "simple query", "query": "Jaké dokumenty z Prahy 16 se týkají rozpočtu?", "language": "cs", "timeframe": "None", "dataset_uris": ["https://data.gov.cz/zdroj/datové-sady/00241598/1535504187"]}

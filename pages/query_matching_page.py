@@ -43,7 +43,10 @@ st.markdown("""
 }
 .dataset-meta {
     font-size: 11px;
-    color: #6b7280;
+    margin-top: 4px;
+}
+.dataset-small {
+    font-size: 11px;
     margin-top: 4px;
 }
 
@@ -77,10 +80,13 @@ def render_card(ds, source, idx):
     with cols[0]:
         st.markdown(f"<p class='dataset-title'>{ds['title_cs']}</p>", unsafe_allow_html=True)
         st.markdown(f"<span class='match-badge'>Matched on: {ds.get('matched_on', 'Search')}</span>", unsafe_allow_html=True)
-        st.markdown(f"<p class='dataset-meta'>Publisher: {ds['publisher_cs']}</p>", unsafe_allow_html=True)
+        st.markdown(f"<p class='dataset-small'>Publisher: {ds['publisher_cs']}</p>", unsafe_allow_html=True)
+        st.markdown(
+            f"<p class='recap-dataset-uri'>URI: <a href='{ds['dataset_uri']}' target='_blank'>{ds['dataset_uri']}</a></p>",
+            unsafe_allow_html=True)
         rdf_status = "rdf-available" if ds["has_rdf_distribution"] else "rdf-unavailable"
         rdf_text = "✓ RDF available" if ds["has_rdf_distribution"] else "✗ No RDF"
-        st.markdown(f"<p class='dataset-meta {rdf_status}'>{rdf_text}</p>", unsafe_allow_html=True)
+        st.markdown(f"<p class='dataset-meta {rdf_status}' style='color:#22C55E;'>{rdf_text}</p>", unsafe_allow_html=True)
     with cols[1]:
         if st.button(btn_label, key=btn_key):
             if is_selected:
@@ -104,6 +110,11 @@ def filter_datasets(datasets, query: str):
 
     return out
 
+with st.container(height=600):
+    for i, ds in enumerate(matched_datasets):
+        render_card(ds, "matched", i)
+        if i < len(matched_datasets) - 1:  # Avoid extra divider at end
+            st.divider()
 
 st.markdown("---")
 search_query = st.text_input(
@@ -114,8 +125,6 @@ search_query = st.text_input(
 )
 
 st.session_state.search_query = search_query
-
-st.markdown("---")
 
 filtered_datasets = filter_datasets(all_datasets, search_query)
 selected_ids = [ds['dataset_uri'] for ds in st.session_state.selected_datasets]
@@ -172,7 +181,6 @@ st.markdown("""
         gap: 8px;
         align-items: center;
         font-size: 12px;
-        color: #9ca3af;
         margin-bottom: 8px;
     }
     .dataset-score {
@@ -221,14 +229,16 @@ st.markdown(f"### Available Datasets ({len(available_datasets)})")
 if len(available_datasets) == 0:
     st.info("No datasets match your search")
 else:
-    container = st.container(height=500)
+    container = st.container(height=600)
     with container:
         for idx, dataset in enumerate(available_datasets):
             # Use the shared renderer so look & behavior are consistent with other lists
             render_card(dataset, "search", idx)
 
+st.markdown("---")
+
 st.markdown(f"### Selected Datasets ({len(st.session_state.selected_datasets)})")
-with st.container(height=200, border=True):
+with st.container(height=600, border=True):
     if not st.session_state.selected_datasets:
         st.info("No datasets selected yet")
     else:
@@ -238,14 +248,6 @@ with st.container(height=200, border=True):
             render_card(ds, "selected", i)
             if i < len(selected) - 1:  # Avoid extra divider at end
                 st.divider()
-
-
-st.markdown("---")
-with st.container(height=400):
-    for i, ds in enumerate(matched_datasets):
-        render_card(ds, "matched", i)
-        if i < len(matched_datasets) - 1:  # Avoid extra divider at end
-            st.divider()
 
 st.markdown("---")
 

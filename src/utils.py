@@ -513,7 +513,7 @@ def format_few_shot_examples(few_shot_list: list[dict]) -> str:
 
     return "\n\n".join(formatted_examples)
 
-def get_few_shot_fnames(matched_substring_lst: set) -> list[str]:
+def get_few_shot_fnames(matched_substring_lst: list) -> list[str]:
     results_list = []
     for input_str in matched_substring_lst:
         first_letters = []
@@ -521,7 +521,7 @@ def get_few_shot_fnames(matched_substring_lst: set) -> list[str]:
 
         for word in words:
             if word:
-                first_letters.append(word[0])
+                first_letters.append(word[0].replace('ú', 'u'))
 
         result_str = "_".join(first_letters)
         results_list.append(f"few_shot_queries_{result_str}.json")
@@ -538,13 +538,13 @@ def load_multiple_jsons_to_list(fnames: list[str]) -> list[dict]:
 
     return results
 
-def format_schemas_for_prompt(schemas: list[str]) -> str:
+def format_schemas_for_prompt(schemas: list[str], formats: list[str]) -> str:
     if not schemas:
         return ""
 
     formatted_blocks = []
-    for i, schema in enumerate(schemas, start=1):
-        block = f"### Schema {i}\n{schema.strip()}\n"
+    for i, schema in enumerate(schemas):
+        block = f"### Schema {i+1}\n{schema.strip()}, format: {formats[i]}\n"
         formatted_blocks.append(block)
 
     return "\n".join(formatted_blocks)

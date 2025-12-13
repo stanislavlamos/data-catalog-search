@@ -37,7 +37,7 @@ class NkodSparqlGenerationEvaluator:
 
             dataset_uris = ofn_sample['dataset_uris']
             language = ofn_sample['language']
-            matched_lst_dict = [df[df["dataset_uri"] == dataset_uri].to_dict() for dataset_uri in dataset_uris]
+            matched_lst_dict = [df[df["dataset_uri"] == dataset_uri].to_dict('records')[0] for dataset_uri in dataset_uris]
 
             request = NkodShaclRequest(
                 query=query,
@@ -47,7 +47,7 @@ class NkodSparqlGenerationEvaluator:
             )
             response = NkodShaclPipeline(request).run()
 
-            print(f"SPARQL query from NKOD RAG:\n{response.sparql_query}")
+            print(f"SPARQL query from NKOD SHACL Pipeline:\n{response.sparql_query}")
             print(f"SPARQL result: \n{response.query_result}")
             print("-" * 80)
             print("\n")
@@ -66,7 +66,7 @@ class NkodSparqlGenerationEvaluator:
 
             dataset_uris = ofn_sample['dataset_uris']
             language = ofn_sample['language']
-            matched_lst_dict = [df[df["dataset_uri"] == dataset_uri].to_dict() for dataset_uri in dataset_uris]
+            matched_lst_dict = [df[df["dataset_uri"] == dataset_uri].to_dict('records')[0] for dataset_uri in dataset_uris]
 
             request = NkodRagRequest(
                 query=query,
@@ -76,7 +76,7 @@ class NkodSparqlGenerationEvaluator:
             )
             response = NkodRagPipeline(request).run()
 
-            print(f"SPARQL query from NKOD RAG:\n{response.sparql_query}")
+            print(f"SPARQL query from NKOD RAG PIPELINE:\n{response.sparql_query}")
             print(f"SPARQL result: \n{response.query_result}")
             print("-" * 80)
             print("\n")
@@ -95,7 +95,7 @@ class NkodSparqlGenerationEvaluator:
 
             dataset_uris = ofn_sample['dataset_uris']
             language = ofn_sample['language']
-            matched_lst_dict = [df[df["dataset_uri"] == dataset_uri].to_dict() for dataset_uri in dataset_uris]
+            matched_lst_dict = [df[df["dataset_uri"] == dataset_uri].to_dict('records')[0] for dataset_uri in dataset_uris]
 
             request = NkodGraphSparqlRequest(
                 query=query,
@@ -105,7 +105,7 @@ class NkodSparqlGenerationEvaluator:
             )
             response = NkodGraphSparqlPipeline(request).run()
 
-            print(f"SPARQL query from NKOD RAG:\n{response.sparql_query}")
+            print(f"SPARQL query from NKOD GRAPH SPARQL PIPELINE:\n{response.sparql_query}")
             print(f"SPARQL result: \n{response.query_result}")
             print("-" * 80)
             print("\n")
@@ -124,7 +124,7 @@ class NkodSparqlGenerationEvaluator:
 
             dataset_uris = ofn_sample['dataset_uris']
             language = ofn_sample['language']
-            matched_lst_dict = [df[df["dataset_uri"] == dataset_uri].to_dict() for dataset_uri in dataset_uris]
+            matched_lst_dict = [df[df["dataset_uri"] == dataset_uri].to_dict('records')[0] for dataset_uri in dataset_uris]
 
             request = NkodOpenAiFilesRequest(
                 query=query,
@@ -134,7 +134,7 @@ class NkodSparqlGenerationEvaluator:
             )
             response = NkodOpenAiFilesPipeline(request).run()
 
-            print(f"SPARQL query from NKOD RAG:\n{response.sparql_query}")
+            print(f"SPARQL query from NKOD OPENAI FILES PIPELINE:\n{response.sparql_query}")
             print(f"SPARQL result: \n{response.query_result}")
             print("-" * 80)
             print("\n")

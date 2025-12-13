@@ -4,8 +4,9 @@ from src.models.base import BaseLLMProvider
 from src.services.nkod_data_processor import NkodDataProcessor
 import os
 from pathlib import Path
-from src.prompts import nkod_shacl_user, nkod_shacl_system
-from src.utils import dir_name_from_uri
+from src.prompts import nkod_shacl_user, nkod_shacl_system, nkod_shacl_error_user
+from src.utils import dir_name_from_uri, format_publishers_or_titles, format_schemas_for_prompt, get_few_shot_fnames, \
+    load_multiple_jsons_to_list, format_few_shot_examples
 
 
 class NkodShacl:
@@ -43,8 +44,8 @@ class NkodShacl:
         }
 
     def generate_sparql_query(self, user_query: str, matched_lst_dict: list[dict], llm_provider: BaseLLMProvider, model_name: str, nkod_data_processor: NkodDataProcessor, language: str, sq_lite: SqLite, graph_db: GraphDb) -> str:
-        titles_str = "\n".join([distribution["title_cs"] for distribution in matched_lst_dict])
-        publishers_str = "\n".join([distribution["publisher_cs"] for distribution in matched_lst_dict])
+        titles_str = format_publishers_or_titles([distribution["title_cs"] for distribution in matched_lst_dict])
+        publishers_str = format_publishers_or_titles([distribution["publisher_cs"] for distribution in matched_lst_dict])
 
         sparql_query = llm_provider.chat(
             user_prompt=nkod_shacl_user[model_name],
@@ -52,15 +53,39 @@ class NkodShacl:
                 "user_question": user_query,
                 "schemas": self.format_schemas_for_prompt(matched_lst_dict, nkod_data_processor),
                 "publishers": publishers_str,
-                "titles": titles_str
+                "titles": titles_str,
+                "few_shot_queries": self.get_few_shots(matched_lst_dict, nkod_data_processor)
             },
-            system_prompt=nkod_shacl_system[model_name]
+            system_prompt=nkod_shacl_system[model_name],
+            purpose="SHACL_PIPELINE"
+        )
+
+        return sparql_query.content[0]["text"]
+
+    def generate_sparql_query_error(self, user_query: str, matched_lst_dict: list[dict], llm_provider: BaseLLMProvider, model_name: str, nkod_data_processor: NkodDataProcessor, language: str, sq_lite: SqLite, graph_db: GraphDb, error: str, failing_query: str) -> str:
+        titles_str = format_publishers_or_titles([distribution["title_cs"] for distribution in matched_lst_dict])
+        publishers_str = format_publishers_or_titles([distribution["publisher_cs"] for distribution in matched_lst_dict])
+
+        sparql_query = llm_provider.chat(
+            user_prompt = nkod_shacl_error_user[model_name],
+            user_prompt_vars = {
+                "user_question": user_query,
+                "schemas": self.format_schemas_for_prompt(matched_lst_dict, nkod_data_processor),
+                "publishers": publishers_str,
+                "titles": titles_str,
+                "stack_trace": error,
+                "failing_query": failing_query,
+                "few_shot_queries": self.get_few_shots(matched_lst_dict, nkod_data_processor)
+            },
+            system_prompt = nkod_shacl_system[model_name],
+            purpose="SHACL_ERROR_PIPELINE"
         )
 
         return sparql_query.content[0]["text"]
 
     def format_schemas_for_prompt(self, matched_lst_dict: list[dict], nkod_data_processor: NkodDataProcessor) -> str:
-        schemas_str = ""
+        schemas = []
+        formats = []
 
         for idx, distribution in enumerate(matched_lst_dict):
             dataset_uri = distribution["dataset_uri"]
@@ -69,12 +94,15 @@ class NkodShacl:
             with open(os.path.join(nkod_data_processor.distribution_download_location, dir_name, "shacl.ttl"), "r", encoding="utf-8") as f:
                 content = f.read()
                 schema_format = "Turtle"
+                schemas.append(content)
+                formats.append(schema_format)
 
-            schemas_str += f"""
-                Schema {idx + 1} (format: {schema_format}):
-                {content}
-                \n\n
-            """
+        return format_schemas_for_prompt(schemas, formats)
 
-        return schemas_str
+    def get_few_shots(self, matched_lst_dict: list[dict], nkod_data_processor: NkodDataProcessor) -> str:
+        ofns = list(set([distribution["matched_substring"] for distribution in matched_lst_dict]))
+        few_shots_lst = load_multiple_jsons_to_list([os.path.join(nkod_data_processor.data_path, fname) for fname in get_few_shot_fnames(ofns)])
+        few_shots_str = format_few_shot_examples(few_shots_lst)
+
+        return few_shots_str
     

@@ -46,7 +46,7 @@ st.markdown("""
 if 'upvotes' not in st.session_state:
     st.session_state.upvotes = {}
 
-datasets_per_row = 4
+datasets_per_row = 2
 rag_data = st.session_state.result.get("rag")
 graph_sparql_data = st.session_state.result.get("graph_sparql")
 openai_files_data = st.session_state.result.get("openai_files")
@@ -82,7 +82,7 @@ def render_dataset_columns(selected_datasets):
                         
                         if dataset["is_executable"]:
                             result_json = json.dumps(str(dataset['query_result']), indent=2, ensure_ascii=False)
-                            st.code(result_json, language="json")
+                            st.code(result_json, language="json", wrap_lines=True, height=400)
                         else:
                             st.info("No result data to display")
                     else:
@@ -145,7 +145,7 @@ if 'upvoted_datasets' in st.session_state and st.session_state.upvoted_datasets:
             if st.button("❌", key=f"delete_{idx}", help="Remove this dataset"):
                 st.session_state.upvoted_datasets.pop(idx - 1)
                 dataset_keys_to_remove = [k for k, v in st.session_state.upvotes.items()
-                                          if upvoted['uri'] in k and v]
+                                          if upvoted['name'] in k and v]
                 for key in dataset_keys_to_remove:
                     del st.session_state.upvotes[key]
 

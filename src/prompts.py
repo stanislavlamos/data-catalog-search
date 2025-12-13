@@ -31,7 +31,7 @@ language_detection_user = {
 
 
 timeframe_detection_system = {
-    "gpt-4.1-nano": """
+    "gpt-4.1": """
     Role: Build a helpful assistant to extract explicit timeframes from user queries.
 
     Instructions:
@@ -58,7 +58,7 @@ timeframe_detection_system = {
 
 
 timeframe_detection_user = {
-    "gpt-4.1-nano": """
+    "gpt-4.1": """
     Role: Extract explicit timeframes from a user query.
     Instructions:
       - Analyze the user's query: {user_query}.
@@ -165,6 +165,13 @@ nkod_query_matching_llm_judge_system = {
     Return in the provided structured format.
     Always return all the datasets you received on the input
     Do not change the URIs or Docs.
+    """,
+    "gpt-5": """
+    You are an advanced dataset recommender.
+    You will receive a user query and a list of candidate datasets (each with Doc + URI).
+    Rerank all datasets by how well their Doc content aligns with the query—consider relevance, coverage, specificity, and complementarity.
+    Return every dataset in the required structured format, ordered from most to least relevant.
+    Do not alter any Docs or URIs.
     """
 }
 
@@ -183,6 +190,34 @@ nkod_query_matching_llm_judge_user = {
     Return the output in the provided structured format.
     Return all {n_datasets} datasets you received on the input.
 
+    User Query:
+    {user_query}
+    
+    Candidate Datasets:
+    {datasets}
+    """,
+    "gpt-5": """
+    You are given:
+    - A user query describing the datasets they need.
+    - A list of candidate datasets, each with a Doc field and a URI.
+    
+    Task:
+    Rerank all candidate datasets based on how well they satisfy the user’s query.
+    
+    Reranking Criteria:
+    1. Relevance – How directly the dataset addresses the user’s query.
+    2. Coverage – How fully the dataset covers the requested information.
+    3. Complementarity – How useful the dataset is in combination with others, relative to the query.
+    
+    Instructions:
+    - Rank all provided datasets from most relevant to least relevant.
+    - For each dataset, assign a relevance_score in the range [0, 1], where:
+      - 1 = perfectly relevant
+      - 0 = irrelevant
+    - Use only the Doc field to assess relevance to the user’s query.
+    - Always return all {n_datasets} datasets in the output.
+    - Follow the provided structured output format.
+    
     User Query:
     {user_query}
     
@@ -238,12 +273,12 @@ nkod_rag_user = {
     
     ### FEW-SHOT EXAMPLES
     
-    {few_shot_examples}
+    {few_shot_queries}
     
     ### INPUTS
     
     Question:
-    {question}
+    {user_question}
     
     Publisher names:
     {publishers}
@@ -285,7 +320,7 @@ nkod_rag_error_user = {
     {failing_query}
     
     **Stacktrace / Error Message:**  
-    {stacktrace}
+    {stack_trace}
     
     When a failing query and its error message are provided:
     - Enter **self-correction mode**.
@@ -321,12 +356,12 @@ nkod_rag_error_user = {
     
     ### FEW-SHOT EXAMPLES
     
-    {few_shot_examples}
+    {few_shot_queries}
     
     ### INPUTS
     
     Question:
-    {question}
+    {user_question}
     
     Publisher names:
     {publishers}
@@ -394,7 +429,7 @@ nkod_graph_sparql_user = {
     - Respond **only** with the SPARQL query.  
     
     # Few-Shot Examples
-    {few_shot_examples}
+    {few_shot_queries}
     
     # Metadata
     
@@ -413,7 +448,7 @@ nkod_graph_sparql_user = {
     {titles}
     
     **User Question:**  
-    {question}
+    {user_question}
     
     # Output
     Return a single **SPARQL SELECT** query that answers the user's question in this format:
@@ -448,14 +483,14 @@ nkod_graph_sparql_error_user = {
     {titles}
     
     **User Question:**  
-    {question}
+    {user_question}
     
     # Failing Query and Error
     **Failing SPARQL query:**  
     {failing_query}
     
     **Stacktrace / Error Message:**  
-    {stacktrace}
+    {stack_trace}
     
     # Rules / Instructions
     - Use only the provided node types and properties.  
@@ -536,7 +571,7 @@ nkod_openai_files_user = {
     ---
     
     # Few-Shot Examples\n
-    {few_shot_examples}
+    {few_shot_queries}
     
     ---
     
@@ -594,7 +629,7 @@ nkod_openai_files_user = {
     ---
     
     # Few-Shot Examples
-    {few_shot_examples}
+    {few_shot_queries}
     
     ---
     
@@ -659,7 +694,7 @@ nkod_openai_files_error_user = {
     ---
     
     # Few-Shot Examples
-    {few_shot_examples}
+    {few_shot_queries}
     
     ---
     
@@ -687,7 +722,7 @@ nkod_openai_files_error_user = {
     
     **Stacktrace:**  
     ```
-    {stacktrace}
+    {stack_trace}
     ```
     
     ---
@@ -730,7 +765,7 @@ nkod_openai_files_error_user = {
     ---
     
     # Few-Shot Examples
-    {few_shot_examples}
+    {few_shot_queries}
     
     ---
     
@@ -758,7 +793,7 @@ nkod_openai_files_error_user = {
     
     **Stacktrace:**  
     ```
-    {stacktrace}
+    {stack_trace}
     ```
     
     ---
@@ -814,7 +849,7 @@ nkod_shacl_user = {
     ---
     
     ## FEW-SHOT EXAMPLES \n
-    {few_shot_examples}
+    {few_shot_queries}
     
     ---
     

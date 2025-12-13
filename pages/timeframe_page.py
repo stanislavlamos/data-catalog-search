@@ -15,12 +15,8 @@ timeframe_to_print = {
     "month": "Last month",
     "custom": "Custom",
 }
-print(st.session_state)
-try:
-    detected_timeframe = st.session_state.result.get('result')
-except:
-    detected_timeframe = st.session_state.selected_timeframe
 
+detected_timeframe = st.session_state.result.get('result')
 st.write(f"**Detected Timeframe:** {st.session_state.result['start_date']} -> {st.session_state.result['end_date']}")
 st.markdown("---")
 

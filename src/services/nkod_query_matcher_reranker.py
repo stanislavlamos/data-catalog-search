@@ -15,7 +15,8 @@ class NkodQueryMatcherReranker:
                 "datasets": datasets
             },
             system_prompt=nkod_query_matching_llm_judge_system["gpt-5"],
-            structured_output=DatasetSelectionOutput
+            structured_output=DatasetSelectionOutput,
+            purpose="NKOD_RERANKING"
         )
         
         sorted_datasets = self._sort_datasets_desc(llm_res, matched_datasets)
@@ -25,14 +26,15 @@ class NkodQueryMatcherReranker:
         datasets = "\n".join([f"{idx + 1}. Doc: {row.title_cs} | {row.description_cs} | {row.publisher_cs}\n   URI: {row.dataset_uri}" for idx, row in enumerate(matched_datasets.itertuples(index=False))])
 
         llm_res = llm_provider.chat(
-            user_prompt=nkod_query_matching_llm_judge_user["gpt-4.1"],
+            user_prompt=nkod_query_matching_llm_judge_user["gpt-5"],
             user_prompt_vars={
                 "user_query": query,
                 "datasets": datasets,
                 "n_datasets": matched_datasets.shape[0]
             },
-            system_prompt=nkod_query_matching_llm_judge_system["gpt-4.1"],
-            structured_output=DatasetSelectionOutput
+            system_prompt=nkod_query_matching_llm_judge_system["gpt-5"],
+            structured_output=DatasetSelectionOutput,
+            purpose="NKOD_RERANKING"
         )
         
         sorted_datasets = self._sort_datasets_desc(llm_res, matched_datasets.to_dict(orient="records"))

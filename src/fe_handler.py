@@ -3,21 +3,28 @@ import os
 import requests
 from typing import Dict, List, Any
 from dotenv import load_dotenv
-
+from src.pipelines.all_datasets_pipeline import AllDatasetsPipeline
+from src.pipelines.language_detection_pipeline import LanguageDetectionPipeline
 from src.pipelines.nkod_graph_sparql_pipeline import NkodGraphSparqlPipeline
 from src.pipelines.nkod_openai_files_pipeline import NkodOpenAiFilesPipeline
+from src.pipelines.nkod_query_matcher_pipeline import NkodQueryMatcherPipeline
 from src.pipelines.nkod_rag_pipeline import NkodRagPipeline
 from src.pipelines.nkod_shacl_pipeline import NkodShaclPipeline
+from src.pipelines.timeframe_detection_pipeline import TimeframeDetectionPipeline
+from src.schemas.language_detection_request import LanguageDetectionRequest
 from src.schemas.nkod_graph_sparql_request import NkodGraphSparqlRequest
 from src.schemas.nkod_openai_files_request import NkodOpenAiFilesRequest
+from src.schemas.nkod_query_matcher_request import NkodQueryMatcherRequest
 from src.schemas.nkod_rag_request import NkodRagRequest
 from src.schemas.nkod_shacl_request import NkodShaclRequest
+from src.schemas.timeframe_detection_request import TimeframeDetectionRequest
 
 
 load_dotenv()
 API_BASE_URL = os.getenv('API_BASE_URL')
 
 def get_timeframe(query: str, llm_provider: str, model_name: str) -> Dict[str, Any]:
+    """
     response = requests.post(
         f"{API_BASE_URL}/detect-timeframe",
         json={
@@ -27,11 +34,18 @@ def get_timeframe(query: str, llm_provider: str, model_name: str) -> Dict[str, A
         }
     )
     response.raise_for_status()
-
-    return response.json()
+    """
+    input_dict = {
+        "text": query,
+        "model_name": "gpt-4.1",
+        "llm_provider": llm_provider
+    }
+    res = TimeframeDetectionPipeline().run(TimeframeDetectionRequest(**input_dict)).model_dump()
+    return res
 
 
 def get_language(query: str, llm_provider: str, model_name: str) -> Dict[str, Any]:
+    """
     response = requests.post(
         f"{API_BASE_URL}/detect-language",
         json={
@@ -41,11 +55,18 @@ def get_language(query: str, llm_provider: str, model_name: str) -> Dict[str, An
         }
     )
     response.raise_for_status()
-
-    return response.json()
+    """
+    input_dict = {
+        "text": query,
+        "model_name": "gpt-4.1-nano",
+        "llm_provider": llm_provider
+    }
+    res = LanguageDetectionPipeline().run(LanguageDetectionRequest(**input_dict)).model_dump()
+    return res
 
 
 def get_query_matching_datasets(query: str, llm_provider: str, model_name: str, language: str) -> Dict[str, Any]:
+    """
     response = requests.post(
         f"{API_BASE_URL}/match-query",
         json={
@@ -56,18 +77,27 @@ def get_query_matching_datasets(query: str, llm_provider: str, model_name: str, 
         }
     )
     response.raise_for_status()
-    
-    return response.json()
+    """
+    input_dict = {
+        "query": query,
+        "llm_provider": llm_provider,
+        "model_name": "gpt-5",
+        "language": language
+    }
+    res = NkodQueryMatcherPipeline().run(NkodQueryMatcherRequest(**input_dict)).model_dump()
+    return res
 
 
 def get_all_datasets() -> List[Dict[str, Any]]:
+    """
     response = requests.get(f"{API_BASE_URL}/get-all-datasets")
     response.raise_for_status()
-    
-    return response.json()
+    """
+    res = AllDatasetsPipeline().run().model_dump()
+    return res
 
 
-def query_matching_content(query: str, llm_provider: str, model_name: str, language: str) -> tuple[Dict[str, Any], Dict[str, Any]]:
+def query_matching_content(query: str, llm_provider: str, model_name: str, language: str) -> tuple[Dict[str, Any], list[Dict[str, Any]]]:
     with ThreadPoolExecutor(max_workers=2) as executor:
         future_query = executor.submit(get_query_matching_datasets, query, llm_provider, model_name, language)
         future_all = executor.submit(get_all_datasets)

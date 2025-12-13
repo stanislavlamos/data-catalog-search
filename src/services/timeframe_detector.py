@@ -11,7 +11,8 @@ class TimeframeDetector:
         response = llm_provider.chat(
             user_prompt=timeframe_detection_user[model_name],
             user_prompt_vars={
-                "user_query": text
+                "user_query": text,
+                "today": today
             },
             system_prompt=timeframe_detection_system[model_name],
             system_prompt_vars={

@@ -38,7 +38,7 @@ def clean_distributions_folder():
 
 def clean_openai_vector_store():
     client = OpenAI()
-    stores = client.vector_stores.list().data
+    stores = client.vector_stores.list(limit=100).data
 
     for store in stores:
         client.vector_stores.delete(store.id)

@@ -39,7 +39,7 @@ pages = {
 }
 
 with st.sidebar:
-    st.header("Query Matching")
+    st.header("Current configuration")
     query = st.session_state.config.get('query', None)
     if query is not None and query:
         st.info(f"**Current Query:**\n\n{query}")

@@ -87,7 +87,8 @@ class GraphDb:
         if named_graph_iris is not None:
             query = self.add_from_to_sparql(query, named_graph_iris)
         
-        #print(f"query with from: {query}")
+        print(f"query with from: \n{query}\n")
+        print("------------------------------------------------")
         
         api_url = self.GRAPHDB_URL_REMOTE
         headers = {

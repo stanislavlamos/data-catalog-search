@@ -6,6 +6,11 @@
 ```env
 OPENAI_API_KEY=
 API_BASE_URL= http://127.0.0.1:8000
+GRAPH_DB_REPO=http://osw.felk.cvut.cz:7200/repositories/lamossta
+GRAPH_DB_REPO_UPDATE=http://osw.felk.cvut.cz:7200/repositories/lamossta/statements
+GRAPH_DB_USER=lamossta
+GRAPH_DB_PASSWORD="S$i#9KoYNxA!cQ"
+DATA_VIEWER_URL=https://data-catalog-viewer-ysmlxmu5hmhaet3xa5nkyz.streamlit.app/
 ```
 
 2. Create and activate custom environment
@@ -19,12 +24,7 @@ source data_catalog_env/bin/activate
 make setup_build
 ```
 
-4. Start BE app
-```shell
-make start_be
-```
-
-5. Start FE app
+4. Start FE app
 ```shell
 make start_fe
 ```
