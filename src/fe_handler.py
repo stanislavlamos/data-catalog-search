@@ -82,7 +82,7 @@ def get_query_matching_datasets(query: str, llm_provider: str, model_name: str, 
         "query": query,
         "llm_provider": llm_provider,
         "model_name": "gpt-5",
-        "language": language
+        "language": "cs" #language
     }
     res = NkodQueryMatcherPipeline().run(NkodQueryMatcherRequest(**input_dict)).model_dump()
     return res
@@ -160,7 +160,7 @@ def get_graph_sparql_response(query: str, model_name: str, dataset_uris: List[st
         "query": query,
         "model_name": model_name,
         "matched_lst_dict": dataset_uris,
-        "language": language
+        "language": "cs" #language
     }
     res = NkodGraphSparqlPipeline(NkodGraphSparqlRequest(**json_dict)).run().model_dump()
     return res
@@ -185,7 +185,7 @@ def get_rag_response(query: str, model_name: str, dataset_uris: List[str], langu
         "query": query,
         "model_name": model_name,
         "matched_lst_dict": dataset_uris,
-        "language": language
+        "language": "cs" #language
     }
     res = NkodRagPipeline(NkodRagRequest(**json_dict)).run().model_dump()
     return res
@@ -210,7 +210,7 @@ def get_openai_files_response(query: str, model_name: str, dataset_uris: List[st
         "query": query,
         "model_name": model_name,
         "matched_lst_dict": dataset_uris,
-        "language": language
+        "language": "cs" #language
     }
     res = NkodOpenAiFilesPipeline(NkodOpenAiFilesRequest(**json_dict)).run().model_dump()
     return res
@@ -235,7 +235,7 @@ def get_shacl_response(query: str, model_name: str, dataset_uris: List[str], lan
         "query": query,
         "model_name": model_name,
         "matched_lst_dict": dataset_uris,
-        "language": language
+        "language": "cs" #language
     }
     res = NkodShaclPipeline(NkodShaclRequest(**json_dict)).run().model_dump()
     return res
