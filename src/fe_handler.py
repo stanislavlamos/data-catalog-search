@@ -109,7 +109,7 @@ def query_matching_content(query: str, llm_provider: str, model_name: str, langu
 
 
 def generate_sparql(query: str, model_name: str, selected_datasets: List[str], language: str) -> Dict[str, Any]:
-    with ThreadPoolExecutor(max_workers=10) as executor:
+    with ThreadPoolExecutor(max_workers=4) as executor:
         future_graph = executor.submit(get_graph_sparql_response, query, model_name, selected_datasets, language)
         future_rag = executor.submit(get_rag_response, query, model_name, selected_datasets, language)
         future_openai_files = executor.submit(get_openai_files_response, query, model_name, selected_datasets, language)
@@ -120,7 +120,6 @@ def generate_sparql(query: str, model_name: str, selected_datasets: List[str], l
         openai_files_result = future_openai_files.result()
         shacl_result = future_shacl.result()
 
-    print("Done pipelines")
     return {
         "graph_sparql": graph_result,
         "rag": rag_result,

@@ -16,9 +16,12 @@ timeframe_to_print = {
     "custom": "Custom",
 }
 
-detected_timeframe = st.session_state.result.get('result')
-st.write(f"**Detected Timeframe:** {st.session_state.result['start_date']} -> {st.session_state.result['end_date']}")
-st.markdown("---")
+detected_timeframe = st.session_state.get('result')
+if isinstance(detected_timeframe, dict) and detected_timeframe.get('timeframe_specified') is not None:
+    st.session_state.selected_timeframe = detected_timeframe
+
+st.write(f"**Detected Timeframe:** {st.session_state.selected_timeframe['start_date']} -> {st.session_state.selected_timeframe['end_date']}")
+#st.markdown("---")
 
 if st.session_state.loading:
     st.markdown("<style>.centered-spinner {display: flex; justify-content: center; align-items: center; height: 60vh;}</style>", unsafe_allow_html=True)
@@ -26,13 +29,13 @@ if st.session_state.loading:
     st.spinner('Detecting timeframe...')
     st.markdown('</div>', unsafe_allow_html=True)
 else:
-    change_tf = st.selectbox("Do you wish to change the detected timeframe?", ["No", "Yes"], key="change_tf_select")
+    change_tf = "No" #st.selectbox("Do you wish to change the detected timeframe?", ["No", "Yes"], key="change_tf_select")
     if change_tf == "Yes":
         tf_options = ["Last week", "Last month", "Custom"]
         selected = st.selectbox("Select timeframe", tf_options, key="tf_select")
         tf_code = {"Last week": "week", "Last month": "month", "Custom": "custom"}[selected]
         st.session_state.selected_timeframe = tf_code
-    else:
+    elif isinstance(detected_timeframe, dict) and detected_timeframe.get('timeframe_specified') is not None:
         st.session_state.selected_timeframe = detected_timeframe
 
     st.markdown("---")

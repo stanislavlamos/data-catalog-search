@@ -59,6 +59,16 @@ class ChromaDb:
         )
 
         return results
+    
+    def similarity_search_google(self, query_texts: List[str], k: int, embedding_provider: BaseEmbeddingProvider) -> list[dict]:
+        query_embeddings = embedding_provider.embed_query(query_texts[0])
+        
+        results = self.collection.query(
+            query_embeddings=query_embeddings,
+            n_results=k
+        )
+
+        return results
 
     def delete_collection(self, collection_name: str) -> None:
         self.client.delete_collection(name=collection_name)
@@ -68,6 +78,13 @@ class ChromaDb:
 
     def flush_cache(self) -> None:
         chromadb.api.client.SharedSystemClient.clear_system_cache()
+    
+    def sizes_of_collections(self):
+        all_collections_names = self.client.list_collections()
+
+        for collection_name in all_collections_names:
+            size = self.client.get_collection(collection_name).count()
+            print(f"{collection_name} -> {size} records")
 
 
 class ChromaEmbeddingFunction(EmbeddingFunction):

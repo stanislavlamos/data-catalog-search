@@ -1,3 +1,4 @@
+import ast
 import re, unicodedata
 from bs4 import BeautifulSoup
 import numpy as np
@@ -247,6 +248,7 @@ def prepare_nkod_keywords_for_chromadb(keywords_from_sql: list[dict], properties
         metadatas.extend(cur_metadatas)
         ids.extend(cur_ids)
     
+    print(f"Keywords len: {len(texts)}")
     return texts, ids, metadatas
 
 def prepare_nkod_descs_for_chromadb(sql_output: list[dict], properties_key: str) -> tuple[list[str], list[str], list[dict]]:
@@ -553,3 +555,22 @@ def format_publishers_or_titles(inp_lst: list[str]) -> str:
     if not inp_lst:
         return ""
     return "\n".join(inp_lst)
+
+def format_input_for_reranker(df: pd.DataFrame) -> tuple[list, list]:
+    uris = df["dataset_uri"].tolist()
+    formated_df = df["title_cs"].astype(str) + "\n" + df["publisher_cs"].astype(str) + '\n' + df["description_cs"].astype(str)
+    return formated_df.tolist(), uris
+
+def get_indexes_from_cohere_reranker(response: dict) -> list[int]:
+    return [r["index"] for r in response["results"]]
+
+def sparql_json_to_df(json_str: dict) -> pd.DataFrame:
+    #data = json.loads(json_str)
+    bindings = json_str.get("results", {}).get("bindings", [])
+
+    rows = []
+    for row in bindings:
+        rows.append({var: val.get("value") for var, val in row.items()})
+
+    df = pd.DataFrame(rows)
+    return df

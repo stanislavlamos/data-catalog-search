@@ -1,6 +1,7 @@
 from dotenv import load_dotenv
 from src.db.chroma_db import ChromaDb
 from src.models.openai_provider import OpenAIEmbeddingProvider
+from src.models.google_provider import GoogleEmbeddingProvider
 from src.services.nkod_data_downloader import NkodDataDownloader
 from src.services.nkod_data_processor import NkodDataProcessor
 from src.db.graph_db import GraphDb
@@ -47,10 +48,11 @@ class IndexDataNkod:
 
     def index_nkod_metadata(self):
         nkod_data_processor = NkodDataProcessor(self.CATALOG_NAME)
-        sq_lite = SqLite(nkod_data_processor.metadata_sql_path)
+        #sq_lite = SqLite(nkod_data_processor.metadata_sql_path)
 
-        openai_embeddings = OpenAIEmbeddingProvider(model_name="text-embedding-3-large", dimensions=None)
+        openai_embeddings = GoogleEmbeddingProvider(model_name="gemini-embedding-001", output_dimensionality=None)#OpenAIEmbeddingProvider(model_name="text-embedding-3-large", dimensions=None)
         chroma_db = ChromaDb(nkod_data_processor.vectordb_path)
-        nkod_data_processor.index_catalog_themes(sq_lite, openai_embeddings, chroma_db)
-        nkod_data_processor.index_catalog_metadata(sq_lite, openai_embeddings, chroma_db)
+        #nkod_data_processor.index_catalog_themes(sq_lite, openai_embeddings, chroma_db)
+        #nkod_data_processor.index_catalog_metadata(sq_lite, openai_embeddings, chroma_db)
         print(f"ChromaDB collections: {chroma_db.list_collections()}")
+        chroma_db.sizes_of_collections()

@@ -11,6 +11,8 @@ GRAPH_DB_REPO_UPDATE=http://osw.felk.cvut.cz:7200/repositories/lamossta/statemen
 GRAPH_DB_USER=lamossta
 GRAPH_DB_PASSWORD="S$i#9KoYNxA!cQ"
 DATA_VIEWER_URL=https://data-catalog-viewer-ysmlxmu5hmhaet3xa5nkyz.streamlit.app/
+CO_API_KEY=
+GOOGLE_API_KEY=
 ```
 
 2. Create and activate custom environment

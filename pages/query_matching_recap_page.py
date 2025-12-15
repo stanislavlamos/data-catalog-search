@@ -35,7 +35,7 @@ with extract_col1:
 
 with extract_col2:
     st.markdown("**Detected Timeframe:**")
-    st.success(f"{st.session_state.selected_timeframe}")
+    st.success(f"{st.session_state.selected_timeframe['start_date']} -> {st.session_state.selected_timeframe['end_date']}")
 
 st.markdown("---")
 st.subheader(f"Selected Datasets ({len(st.session_state.get('selected_datasets', []))})")

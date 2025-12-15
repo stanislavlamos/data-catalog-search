@@ -5,9 +5,15 @@ st.title("🔍 Query Matching")
 st.markdown("Select relevant datasets that match your query criteria")
 st.markdown("---")
 
-
-matched_datasets = st.session_state.result[0]["matched_lst_dict"]
-all_datasets = st.session_state.result[1]["all_datasets"]   
+try:
+    matched_datasets = st.session_state.result[0]["matched_lst_dict"]
+    all_datasets = st.session_state.result[1]["all_datasets"]
+    st.session_state.matched_datasets = matched_datasets
+    st.session_state.all_datasets = all_datasets
+except Exception as e:
+    matched_datasets = st.session_state.matched_datasets
+    all_datasets = st.session_state.all_datasets
+    
 
 if "selected_datasets" not in st.session_state:
     st.session_state.selected_datasets = []
@@ -71,9 +77,9 @@ st.markdown("""
 
 def render_card(ds, source, idx):
     ds_id = ds["dataset_uri"]
-    is_selected = ds_id in selected_ids  # Use pre-computed set
+    is_selected = ds_id in selected_ids 
     btn_label = "✕" if is_selected else "➕"
-    btn_key = f"{source}_{idx}"  # Simplified key
+    btn_key = f"{source}_{idx}" 
     
     cols = st.columns([10, 1])
     with cols[0]:
@@ -94,7 +100,6 @@ def render_card(ds, source, idx):
                 st.session_state.selected_datasets.append(ds)
             st.rerun()
 
-# Added helper to filter datasets by query (title, description, tags)
 def filter_datasets(datasets, query: str):
     q = (query or "").strip().lower()
     
@@ -103,7 +108,7 @@ def filter_datasets(datasets, query: str):
     
     out = []
     for ds in datasets:
-        if q in ds.get('title_cs', '').lower() or q in ds.get('publisher_cs', '').lower():
+        if q in ds.get('title_cs', '').lower() or q in ds.get('publisher_cs', '').lower() or q in ds.get('description_cs', '').lower():
             out.append(ds)
             continue
 
@@ -112,7 +117,7 @@ def filter_datasets(datasets, query: str):
 with st.container(height=600):
     for i, ds in enumerate(matched_datasets):
         render_card(ds, "matched", i)
-        if i < len(matched_datasets) - 1:  # Avoid extra divider at end
+        if i < len(matched_datasets) - 1: 
             st.divider()
 
 st.markdown("---")
@@ -231,7 +236,6 @@ else:
     container = st.container(height=600)
     with container:
         for idx, dataset in enumerate(available_datasets):
-            # Use the shared renderer so look & behavior are consistent with other lists
             render_card(dataset, "search", idx)
 
 st.markdown("---")
@@ -245,15 +249,16 @@ with st.container(height=600, border=True):
         selected = st.session_state.selected_datasets
         for i, ds in enumerate(selected):
             render_card(ds, "selected", i)
-            if i < len(selected) - 1:  # Avoid extra divider at end
+            if i < len(selected) - 1:  
                 st.divider()
 
 st.markdown("---")
 
-too_many_selected = len(st.session_state.selected_datasets) > 3
+too_many_selected = len(st.session_state.selected_datasets) > 5
+too_few_selected = len(st.session_state.selected_datasets) < 1
 has_invalid_rdf = any(not ds.get("has_rdf_distribution", False) for ds in st.session_state.selected_datasets)
 
-invalid_selection = too_many_selected or has_invalid_rdf
+invalid_selection = too_many_selected or has_invalid_rdf or too_few_selected
 
 if invalid_selection:
     if "shown_popup" not in st.session_state or not st.session_state.shown_popup:
@@ -262,6 +267,8 @@ if invalid_selection:
     with st.expander("Details of the issue", expanded=True):
         if too_many_selected:
             st.write("- You have selected **more than 3 datasets**.")
+        if too_few_selected:
+            st.write("- You have to select **at least one dataset**.")
         if has_invalid_rdf:
             st.write("- One or more selected datasets **do not have RDF distributions**.")
 else:

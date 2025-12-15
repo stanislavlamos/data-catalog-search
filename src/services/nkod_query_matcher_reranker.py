@@ -1,7 +1,9 @@
 import pandas as pd
 from src.models.base import BaseLLMProvider
+from src.models.cohere_provider import CohereProvider
 from src.schemas.schemas import DatasetSelectionOutput
 from src.prompts import nkod_query_matching_llm_judge_user, nkod_query_matching_llm_judge_system
+from src.utils import format_input_for_reranker, get_indexes_from_cohere_reranker
 
 
 class NkodQueryMatcherReranker:
@@ -22,7 +24,7 @@ class NkodQueryMatcherReranker:
         sorted_datasets = self._sort_datasets_desc(llm_res, matched_datasets)
         return sorted_datasets
     
-    def rerank_query_results_ofn(self, query: str, matched_datasets: pd.DataFrame, llm_provider: BaseLLMProvider) -> list[dict]:
+    def rerank_query_results_ofn_llm(self, query: str, matched_datasets: pd.DataFrame, llm_provider: BaseLLMProvider) -> list[dict]:
         datasets = "\n".join([f"{idx + 1}. Doc: {row.title_cs} | {row.description_cs} | {row.publisher_cs}\n   URI: {row.dataset_uri}" for idx, row in enumerate(matched_datasets.itertuples(index=False))])
 
         llm_res = llm_provider.chat(
@@ -39,6 +41,23 @@ class NkodQueryMatcherReranker:
         
         sorted_datasets = self._sort_datasets_desc(llm_res, matched_datasets.to_dict(orient="records"))
         return sorted_datasets
+
+    def rerank_query_results_reranker(self, query: str, matched_datasets: pd.DataFrame, cohere_provider: CohereProvider) -> list[dict]:
+        docs, uris = format_input_for_reranker(matched_datasets)
+        top_n = len(docs)
+        reranker_res = cohere_provider.rerank_docs(docs, top_n, query)
+        indexes = get_indexes_from_cohere_reranker(reranker_res)
+        uri_order = [uris[idx] for idx in indexes]
+
+        reranked_list = (
+            matched_datasets
+            .set_index("dataset_uri")
+            .loc[uri_order]
+            .reset_index()                
+            .to_dict(orient="records")    
+        )
+
+        return reranked_list
 
     def _sort_datasets_desc(self, output: DatasetSelectionOutput, matched_datasets: list[dict]) -> list[dict]:
         ret_lst = []

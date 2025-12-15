@@ -1,5 +1,5 @@
 {"desc": "simple query", "query": "Kolik je aktualit v Říčanech?", "language": "cs", "timeframe": "None", "dataset_uris": ["https://data.gov.cz/zdroj/datové-sady/00240702/1424895444"]}
-{"desc": "simple query", "query":  "Jaké jsou aktuality v Říčanech?", "language": "cs", "timeframe": "None", "dataset_uris": ["https://data.gov.cz/zdroj/datové-sady/00240702/1424895444"]}
+{"desc": "simple query", "query": "Jaké jsou aktuality v Říčanech?", "language": "cs", "timeframe": "None", "dataset_uris": ["https://data.gov.cz/zdroj/datové-sady/00240702/1424895444"]}
 {"desc": "simple query", "query": "Které záznamy České obchodní inspekce jsou relevantní do konce tohoto roku?", "language": "cs", "timeframe": "None", "dataset_uris": ["https://data.gov.cz/zdroj/datové-sady/00020869/1037636773"]}
 {"desc": "simple query", "query": "Ukaž názvy a URL odkazy z úřední desky Vsetína.", "language": "cs", "timeframe": "None", "dataset_uris": ["https://data.gov.cz/zdroj/datové-sady/00304450/1003115464"]}
 {"desc": "simple query", "query": "Ukaž všechny turistické cíle na Vyžlovce a zda jsou bezbariérové?", "language": "cs", "timeframe": "None", "dataset_uris": ["https://data.gov.cz/zdroj/datové-sady/00235938/1355924909"]}

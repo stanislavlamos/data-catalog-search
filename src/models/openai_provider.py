@@ -18,10 +18,6 @@ class OpenAILLMProvider(BaseLLMProvider):
     def chat(self, user_prompt: str, system_prompt: str, user_prompt_vars: dict | None = None, system_prompt_vars: dict | None = None, structured_output: BaseModel | None = None, file_ids: list[str] | None = None, purpose: str | None = None, vector_store_id: str | None = None) -> str | BaseModel | tuple[str | BaseModel, str]:
         user_prompt = user_prompt.format(**(user_prompt_vars or {}))
         system_prompt = system_prompt.format(**(system_prompt_vars or {}))
-
-        print(f"System: \n{system_prompt}\n\n")
-        print(f"User: \n{user_prompt}\n\n")
-
         start = time.time()
         
         if file_ids is not None:
@@ -32,6 +28,7 @@ class OpenAILLMProvider(BaseLLMProvider):
 
         effort = "minimal" if purpose is not None and purpose == "NKOD_RERANKING" else "low"
         reasoning = {"reasoning": {"effort": effort}} if self.model_name in ["gpt-5", "gpt-5-mini"] else {}
+        print(f"Sent OpenAI request -> model: {self.model_name}|effort: {effort}, purpose: {purpose}")
         llm = ChatOpenAI(model=self.model_name, temperature=self.temperature, **reasoning)
         if structured_output is not None:
             llm = llm.with_structured_output(structured_output)
@@ -57,7 +54,8 @@ class OpenAILLMProvider(BaseLLMProvider):
             chunking_strategy=Omit(),
             file_ids=file_ids
         )
-        print("vector store created")
+
+        print(f"Sent OpenAI request -> model: {self.model_name}|effort: low, purpose: {purpose}")
         response = client.responses.create(
             model=self.model_name,
             reasoning={"effort": "low"},
@@ -77,6 +75,7 @@ class OpenAILLMProvider(BaseLLMProvider):
         client = OpenAI()
         start = time.time()
 
+        print(f"Sent OpenAI request -> model: {self.model_name}|effort: low, purpose: {purpose}")
         response = client.responses.create(
             model=self.model_name,
             reasoning={"effort": "low"},

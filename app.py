@@ -58,6 +58,7 @@ with st.sidebar:
     st.markdown("---")
 
     if st.button("🔄 Start Over", use_container_width=True, type="secondary"):
+        st.session_state.clear()
         st.session_state.loading = True
         st.rerun()
 
@@ -81,11 +82,11 @@ if st.session_state.loading:
         else:
             for key in list(st.session_state.keys()):
                 if key != 'loading':
-                    del st.session_state[key]
+                    continue
+                    #del st.session_state[key]
             st.session_state.loading = False
             st.session_state.current_page = 'homepage'
             st.rerun()
 else:
     pg = st.navigation([pages[st.session_state.current_page]])
     pg.run()
-

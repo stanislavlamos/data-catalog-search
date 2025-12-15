@@ -16,10 +16,18 @@ language_to_print = {
 st.title("Language Detection")
 st.write("Detected language of your input query")
 
-if st.session_state.result.get('text') is not None:
-    st.write(f"**Detected Language:** {language_to_print[st.session_state.result.get('text')]}")
+detected_text = st.session_state.result
+if isinstance(detected_text, dict) and st.session_state.result.get('text') is not None:
+    detected_text = st.session_state.result.get('text')
+    st.session_state.selected_language = st.session_state.result.get('text')
 else:
-    st.write(f"**Detected Language:** {language_to_print[st.session_state.selected_language]}")
+    detected_text = None
+
+lang_key = detected_text if detected_text is not None else st.session_state.selected_language
+if lang_key is None or lang_key not in language_to_print:
+    lang_key = 'cs'
+
+st.write(f"**Detected Language:** {language_to_print[lang_key]}")
 st.markdown("---")
 
 change_lang = st.selectbox("Do you wish to change the detected language?", ["No", "Yes"], key="change_lang_select")
@@ -29,7 +37,7 @@ if change_lang == "Yes":
     selected = st.selectbox("Select language", lang_options, key="lang_select")
     lang_code = {"Czech": "cs", "English": "cs"}[selected] #{"Czech": "cs", "English": "en"}[selected], fixed to cs since we are working on the NKOD data
     st.session_state.selected_language = lang_code
-else:
+elif isinstance(detected_text, dict) and detected_text is not None:
     st.session_state.selected_language = st.session_state.result.get('text')
     if st.session_state.selected_language == "other":
         st.session_state.selected_language = "cs"

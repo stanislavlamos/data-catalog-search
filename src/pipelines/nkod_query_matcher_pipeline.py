@@ -1,4 +1,5 @@
 from src.db.chroma_db import ChromaDb
+from src.models.cohere_provider import CohereProvider
 from src.models.model_handler import LLMProviderHandler, EmbeddingProviderHandler
 from src.schemas.nkod_query_matcher_request import NkodQueryMatcherRequest
 from src.schemas.nkod_query_matcher_response import NkodQueryMatcherResponse
@@ -35,9 +36,10 @@ class NkodQueryMatcherPipeline:
         self.nkod_query_matcher = NkodQueryMatcher(self.query)
         self.nkod_query_reranker = NkodQueryMatcherReranker()
         self.entity_generator = EntityGenerator()
+        self.cohere_provider = CohereProvider()
 
         df = self._run_query_matching_parallel()
-        reranked_lst_dict = self._run_reranking_ofn_topk(df) #self._run_reranking_ofn(df)
+        reranked_lst_dict = self._run_reranker_ofn(df) #self._run_reranking_ofn_topk(df) #self._run_reranking_ofn(df)
        
         return NkodQueryMatcherResponse(
             matched_lst_dict=reranked_lst_dict
@@ -68,7 +70,7 @@ class NkodQueryMatcherPipeline:
         res_df = res_df.sort_values("score", ascending=True)
         return res_df
 
-    def _run_reranking_parallel(self, matched_titles: list[dict], matched_descs: list[dict], matched_keywords: list[dict]) -> tuple[list[dict], list[dict], list[dict]]:
+    def _run_reranking_parallel_llm(self, matched_titles: list[dict], matched_descs: list[dict], matched_keywords: list[dict]) -> tuple[list[dict], list[dict], list[dict]]:
         tasks = [
             ("reranked_matching_titles", self.nkod_query_reranker.rerank_query_results, (self.query, matched_titles, self.llm_provider)),
             ("reranked_descs", self.nkod_query_reranker.rerank_query_results, (self.query, matched_descs, self.llm_provider)),
@@ -86,15 +88,15 @@ class NkodQueryMatcherPipeline:
 
         return res["reranked_matching_titles"], res["reranked_descs"], res["reranked_keywords"]
 
-    def _run_reranking_ofn_batched(self, matched_df: pd.DataFrame) -> list[dict]:
+    def _run_reranking_ofn_batched_llm(self, matched_df: pd.DataFrame) -> list[dict]:
         batched_df = [matched_df.iloc[i:i + self.BATCH_SIZE] for i in range(0, len(matched_df), self.BATCH_SIZE)]
         tasks = [
-            (f"batch_{i}", self.nkod_query_reranker.rerank_query_results_ofn, (self.query, batch, self.llm_provider))
+            (f"batch_{i}", self.nkod_query_reranker.rerank_query_results_ofn_llm, (self.query, batch, self.llm_provider))
             for i, batch in enumerate(batched_df)
         ]
         
         results = {}
-        with ThreadPoolExecutor(max_workers=100) as executor:
+        with ThreadPoolExecutor(max_workers=len(tasks)) as executor:
             future_to_name = {
                 executor.submit(fn, *args): name
                 for name, fn, args in tasks
@@ -108,15 +110,16 @@ class NkodQueryMatcherPipeline:
 
         return sorted_res
 
-    def _run_reranking_ofn_topk(self, matched_df: pd.DataFrame, k: int = 10) -> list[dict]:
+    def _run_reranking_ofn_topk_llm(self, matched_df: pd.DataFrame, k: int = 10) -> list[dict]:
         df_k = matched_df.iloc[:k].copy()
         df_rest = matched_df.iloc[k:].copy()
         df_rest["relevance_score"] = 0.0
         rest_list = df_rest.to_dict(orient="records")
-        reranked_lst = self.nkod_query_reranker.rerank_query_results_ofn(self.query, df_k, self.llm_provider)
+        reranked_lst = self.nkod_query_reranker.rerank_query_results_ofn_llm(self.query, df_k, self.llm_provider)
         reranked_lst.extend(rest_list)
         sorted_res = sorted(reranked_lst, key=lambda d: d["relevance_score"], reverse=True)
 
         return sorted_res
-
-
+    
+    def _run_reranker_ofn(self, matched_df: pd.DataFrame) -> list[dict]:
+        return self.nkod_query_reranker.rerank_query_results_reranker(self.query, matched_df, self.cohere_provider)

@@ -2,6 +2,8 @@ import streamlit as st
 import json
 import time
 
+from src.utils import sparql_json_to_df
+
 
 st.title("🔧 SPARQL Query Generation")
 st.markdown("Generated SPARQL queries and their results for each pipeline")
@@ -81,18 +83,19 @@ def render_dataset_columns(selected_datasets):
                         st.success(f"✓ Query executed successfully")
                         
                         if dataset["is_executable"]:
-                            result_json = json.dumps(str(dataset['query_result']), indent=2, ensure_ascii=False)
-                            st.code(result_json, language="json", wrap_lines=True, height=400)
+                            #result_json = json.dumps(str(dataset['query_result']), indent=2, ensure_ascii=False)
+                            #st.code(result_json, language="json", wrap_lines=True, height=400)
+                            st.dataframe(sparql_json_to_df(dataset['query_result']), height=400)
                         else:
                             st.info("No result data to display")
                     else:
                         st.error("✗ Query execution failed")
 
-                with st.container(border=True):
-                    st.markdown("<p class='sparql-title'>📋 Summary</p>", unsafe_allow_html=True)
+                #with st.container(border=True):
+                #    st.markdown("<p class='sparql-title'>📋 Summary</p>", unsafe_allow_html=True)
 
-                    summary_text = dataset.get('summary')
-                    st.write(summary_text)
+                #    summary_text = dataset.get('summary')
+                #    st.write(summary_text)
 
                 is_upvoted = dataset_key in st.session_state.upvotes and st.session_state.upvotes[dataset_key]
 

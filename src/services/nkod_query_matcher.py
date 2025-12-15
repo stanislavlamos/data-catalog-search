@@ -1,8 +1,6 @@
 import os
 from pathlib import Path
-
 import pandas as pd
-
 from src.db.chroma_db import ChromaDb
 from src.models.base import BaseEmbeddingProvider, BaseLLMProvider
 from src.schemas.schemas import InputLanguage, DatasetSelectionOutput
@@ -60,7 +58,7 @@ class NkodQueryMatcher(BaseQueryMatcher):
     def get_matching_keywords(self, k: int, chroma_db: ChromaDb, nkod_data_processor: NkodDataProcessor, language: str, embedding_provider: BaseEmbeddingProvider, return_df: bool = False) -> list[dict] | pd.DataFrame:
         collection_name = f"{nkod_data_processor.keywords_collection_name}_{language}"
         chroma_db.load_collection(collection_name, embedding_provider)
-        similarity_search = chroma_db.similarity_search([self.query], k)
+        similarity_search = chroma_db.similarity_search_google([self.query], k, embedding_provider)
         query_result = parse_chroma_output(similarity_search, "Keyword", return_df)
 
         return query_result
@@ -68,7 +66,7 @@ class NkodQueryMatcher(BaseQueryMatcher):
     def get_matching_descriptions(self, k: int, chroma_db: ChromaDb, nkod_data_processor: NkodDataProcessor, language: str, embedding_provider: BaseEmbeddingProvider, return_df: bool = False) -> list[dict] | pd.DataFrame:
         collection_name = f"{nkod_data_processor.descriptions_collection_name}_{language}"
         chroma_db.load_collection(collection_name, embedding_provider)
-        similarity_search = chroma_db.similarity_search([self.query], k)
+        similarity_search = chroma_db.similarity_search_google([self.query], k, embedding_provider)
         query_result = parse_chroma_output(similarity_search, "Description", return_df)
 
         return query_result
@@ -76,7 +74,7 @@ class NkodQueryMatcher(BaseQueryMatcher):
     def get_matching_titles(self, k: int, chroma_db: ChromaDb, nkod_data_processor: NkodDataProcessor, language: str, embedding_provider: BaseEmbeddingProvider, return_df: bool = False) -> list[dict] | pd.DataFrame:
         collection_name = f"{nkod_data_processor.titles_collection_name}_{language}"
         chroma_db.load_collection(collection_name, embedding_provider)
-        similarity_search = chroma_db.similarity_search([self.query], k)
+        similarity_search = chroma_db.similarity_search_google([self.query], k, embedding_provider)
         query_result = parse_chroma_output(similarity_search, "Title", return_df)
 
         return query_result
@@ -88,7 +86,7 @@ class NkodQueryMatcher(BaseQueryMatcher):
         for entity_dict in entities:
             collection_name = f"{nkod_data_processor.titles_collection_name}_{language}"
             chroma_db.load_collection(collection_name, embedding_provider)
-            similarity_search = chroma_db.similarity_search([strip_text(to_lower(entity_dict["value"]))], k)
+            similarity_search = chroma_db.similarity_search_google([strip_text(to_lower(entity_dict["value"]))], k, embedding_provider)
             query_result = parse_chroma_output(similarity_search, "Entity", return_df)
             out_dfs.append(query_result)
         
@@ -106,7 +104,7 @@ class NkodQueryMatcher(BaseQueryMatcher):
         for entity_dict in entities:
             collection_name = f"{nkod_data_processor.descriptions_collection_name}_{language}"
             chroma_db.load_collection(collection_name, embedding_provider)
-            similarity_search = chroma_db.similarity_search([strip_text(to_lower(entity_dict["value"]))], k)
+            similarity_search = chroma_db.similarity_search_google([strip_text(to_lower(entity_dict["value"]))], k, embedding_provider)
             query_result = parse_chroma_output(similarity_search, "Entity", return_df)
             out_dfs.append(query_result)
         
@@ -124,7 +122,7 @@ class NkodQueryMatcher(BaseQueryMatcher):
         for entity_dict in entities:
             collection_name = f"{nkod_data_processor.keywords_collection_name}_{language}"
             chroma_db.load_collection(collection_name, embedding_provider)
-            similarity_search = chroma_db.similarity_search([strip_text(to_lower(entity_dict["value"]))], k)
+            similarity_search = chroma_db.similarity_search_google([strip_text(to_lower(entity_dict["value"]))], k, embedding_provider)
             query_result = parse_chroma_output(similarity_search, "Entity", return_df)
             out_dfs.append(query_result)
         
@@ -138,7 +136,7 @@ class NkodQueryMatcher(BaseQueryMatcher):
     def get_matching_theme_labels(self, k: int, chroma_db: ChromaDb, nkod_data_processor: NkodDataProcessor, language: str, embedding_provider: BaseEmbeddingProvider, with_scores: bool = False) -> list[str] | tuple[list[str], list[tuple[float, str]]]:
         collection_name = f"{nkod_data_processor.themes_labels_collection_name}_{language}"
         chroma_db.load_collection(collection_name, embedding_provider)
-        similarity_search = chroma_db.similarity_search([self.query], k)
+        similarity_search = chroma_db.similarity_search_google([self.query], k, embedding_provider)
         query_result = get_uris_from_chroma_query(similarity_search["metadatas"], "theme_name")
         query_result_with_scores = get_docs_and_scores_from_chroma_query(similarity_search["documents"], similarity_search["distances"], "theme_name")
 
@@ -150,7 +148,7 @@ class NkodQueryMatcher(BaseQueryMatcher):
     def get_matching_theme_definitions(self, k: int, chroma_db: ChromaDb, nkod_data_processor: NkodDataProcessor, language: str, embedding_provider: BaseEmbeddingProvider, with_scores: bool = False) -> list[str] | tuple[list[str], list[tuple[float, str]]]:
         collection_name = f"{nkod_data_processor.themes_definitions_collection_name}_{language}"
         chroma_db.load_collection(collection_name, embedding_provider)
-        similarity_search = chroma_db.similarity_search([self.query], k)
+        similarity_search = chroma_db.similarity_search_google([self.query], k, embedding_provider)
         query_result = get_uris_from_chroma_query(similarity_search["metadatas"], "theme_name")
         query_result_with_scores = get_docs_and_scores_from_chroma_query(similarity_search["documents"], similarity_search["distances"], "theme_name")
 
@@ -162,7 +160,7 @@ class NkodQueryMatcher(BaseQueryMatcher):
     def get_matching_titles_llm(self, k: int, chroma_db: ChromaDb, nkod_data_processor: NkodDataProcessor, language: str, embedding_provider: BaseEmbeddingProvider, with_scores: bool = False) -> tuple[list[str], list[dict]]:
         collection_name = f"{nkod_data_processor.titles_collection_name}_{language}"
         chroma_db.load_collection(collection_name, embedding_provider)
-        similarity_search_res = chroma_db.similarity_search([self.query], k)
+        similarity_search_res = chroma_db.similarity_search_google([self.query], k, embedding_provider)
         merged_docs_with_metadatas = merge_chromadb_docs_with_metadatas(similarity_search_res)
         query_result = get_uris_from_chroma_query(similarity_search_res["metadatas"])
 
