@@ -48,11 +48,11 @@ class IndexDataNkod:
 
     def index_nkod_metadata(self):
         nkod_data_processor = NkodDataProcessor(self.CATALOG_NAME)
-        #sq_lite = SqLite(nkod_data_processor.metadata_sql_path)
+        sq_lite = SqLite(nkod_data_processor.metadata_sql_path)
 
         openai_embeddings = GoogleEmbeddingProvider(model_name="gemini-embedding-001", output_dimensionality=None)#OpenAIEmbeddingProvider(model_name="text-embedding-3-large", dimensions=None)
         chroma_db = ChromaDb(nkod_data_processor.vectordb_path)
-        #nkod_data_processor.index_catalog_themes(sq_lite, openai_embeddings, chroma_db)
-        #nkod_data_processor.index_catalog_metadata(sq_lite, openai_embeddings, chroma_db)
+        nkod_data_processor.index_catalog_themes(sq_lite, openai_embeddings, chroma_db)
+        nkod_data_processor.index_catalog_metadata(sq_lite, openai_embeddings, chroma_db)
         print(f"ChromaDB collections: {chroma_db.list_collections()}")
         chroma_db.sizes_of_collections()
