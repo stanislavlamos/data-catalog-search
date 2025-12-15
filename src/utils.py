@@ -564,9 +564,8 @@ def format_input_for_reranker(df: pd.DataFrame) -> tuple[list, list]:
 def get_indexes_from_cohere_reranker(response: dict) -> list[int]:
     return [r["index"] for r in response["results"]]
 
-def sparql_json_to_df(json_str: dict) -> pd.DataFrame:
-    #data = json.loads(json_str)
-    bindings = json_str.get("results", {}).get("bindings", [])
+def sparql_json_to_df(inp_dict: dict) -> pd.DataFrame:
+    bindings = inp_dict.get("results", {}).get("bindings", [])
 
     rows = []
     for row in bindings:
