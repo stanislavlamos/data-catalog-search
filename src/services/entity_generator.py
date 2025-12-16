@@ -74,11 +74,15 @@ class EntityGenerator:
             "model": self.MODEL,
         }
 
-        response = self.perform_request(self.SERVICE_URL, "recognize", request_data)
-        if "model" not in response or "result" not in response:
-            raise ValueError("Cannot parse the NameTag 3 'recognize' REST request response.")
+        try:
+            response = self.perform_request(self.SERVICE_URL, "recognize", request_data)
+            if "model" not in response or "result" not in response:
+                raise ValueError("Cannot parse the NameTag 3 'recognize' REST request response.")
 
-        return self.group_conll_entities_to_dict(self.format_entities(response["result"].splitlines()))
+            return self.group_conll_entities_to_dict(self.format_entities(response["result"].splitlines()))
+
+        except Exception as e:
+            return []
 
     def perform_request(self, server: str, method: str, params: dict):
         if not params:

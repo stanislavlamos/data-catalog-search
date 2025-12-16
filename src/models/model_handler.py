@@ -17,7 +17,8 @@ class LLMProviderHandler:
 class EmbeddingProviderHandler:
     @staticmethod
     def get_model(provider_name: str, model_name: str | None = None) -> OpenAIEmbeddingProvider | GoogleEmbeddingProvider:
-        return GoogleEmbeddingProvider(model_name="gemini-embedding-001", output_dimensionality=None)
+        return OpenAIEmbeddingProvider(model_name="text-embedding-3-large", dimensions=None)
+        #return GoogleEmbeddingProvider(model_name="gemini-embedding-001", output_dimensionality=None)
         """
         if provider_name == "openai":
             return OpenAIEmbeddingProvider(model_name="text-embedding-3-large", dimensions=None)

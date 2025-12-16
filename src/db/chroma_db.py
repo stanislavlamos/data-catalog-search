@@ -52,7 +52,7 @@ class ChromaDb:
                 ids=id_batch
             )
 
-    def similarity_search(self, query_texts: List[str], k: int = 5) -> list[dict]:
+    def similarity_search(self, query_texts: List[str], k: int, embedding_provider: BaseEmbeddingProvider) -> list[dict]:
         results = self.collection.query(
             query_texts=query_texts,
             n_results=k

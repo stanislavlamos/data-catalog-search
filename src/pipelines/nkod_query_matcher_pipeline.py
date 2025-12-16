@@ -46,13 +46,14 @@ class NkodQueryMatcherPipeline:
         )
 
     def _run_query_matching_parallel(self) -> pd.DataFrame:
+        entities = self.entity_generator.generate_entities(self.query)
         tasks = [
             ("matching_titles", self.nkod_query_matcher.get_matching_titles, (self.k, self.chroma_db, self.nkod_data_processor, self.language, self.embedding_provider, True)),
             ("matching_descs", self.nkod_query_matcher.get_matching_descriptions, (self.k, self.chroma_db, self.nkod_data_processor, self.language, self.embedding_provider, True)),
             ("matching_keywords", self.nkod_query_matcher.get_matching_keywords, (self.k, self.chroma_db, self.nkod_data_processor, self.language, self.embedding_provider, True)),
-            ("entity_titles", self.nkod_query_matcher.get_matching_entitities_titles, (self.k, self.chroma_db, self.nkod_data_processor, self.language, self.embedding_provider, self.entity_generator, True)),
-            ("entity_keywords", self.nkod_query_matcher.get_matching_entitities_keywords, (self.k, self.chroma_db, self.nkod_data_processor, self.language, self.embedding_provider, self.entity_generator, True)),
-            ("entity_descriptions", self.nkod_query_matcher.get_matching_entitities_descriptions, (self.k, self.chroma_db, self.nkod_data_processor, self.language, self.embedding_provider, self.entity_generator, True)),
+            ("entity_titles", self.nkod_query_matcher.get_matching_entitities_titles, (self.k, self.chroma_db, self.nkod_data_processor, self.language, self.embedding_provider, entities, True)),
+            ("entity_keywords", self.nkod_query_matcher.get_matching_entitities_keywords, (self.k, self.chroma_db, self.nkod_data_processor, self.language, self.embedding_provider, entities, True)),
+            ("entity_descriptions", self.nkod_query_matcher.get_matching_entitities_descriptions, (self.k, self.chroma_db, self.nkod_data_processor, self.language, self.embedding_provider, entities, True))
         ]
         num_workers = len(tasks)
         res = {}

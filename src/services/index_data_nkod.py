@@ -50,7 +50,7 @@ class IndexDataNkod:
         nkod_data_processor = NkodDataProcessor(self.CATALOG_NAME)
         sq_lite = SqLite(nkod_data_processor.metadata_sql_path)
 
-        openai_embeddings = GoogleEmbeddingProvider(model_name="gemini-embedding-001", output_dimensionality=None)#OpenAIEmbeddingProvider(model_name="text-embedding-3-large", dimensions=None)
+        openai_embeddings = OpenAIEmbeddingProvider(model_name="text-embedding-3-large", dimensions=None)     #GoogleEmbeddingProvider(model_name="gemini-embedding-001", output_dimensionality=None)
         chroma_db = ChromaDb(nkod_data_processor.vectordb_path)
         nkod_data_processor.index_catalog_themes(sq_lite, openai_embeddings, chroma_db)
         nkod_data_processor.index_catalog_metadata(sq_lite, openai_embeddings, chroma_db)

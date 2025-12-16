@@ -22,6 +22,7 @@ language_detection_user = {
     - "ZPS obec Studenec" → czech
     - "Hello, ahoj" → other
     - "Bonjour" → other
+    - "Ukaž dokumenty, které se týkají veřejných zakázek v DIA." → czech
     
     Now classify the following text:
     

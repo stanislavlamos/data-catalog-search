@@ -248,7 +248,6 @@ def prepare_nkod_keywords_for_chromadb(keywords_from_sql: list[dict], properties
         metadatas.extend(cur_metadatas)
         ids.extend(cur_ids)
     
-    print(f"Keywords len: {len(texts)}")
     return texts, ids, metadatas
 
 def prepare_nkod_descs_for_chromadb(sql_output: list[dict], properties_key: str) -> tuple[list[str], list[str], list[dict]]:
