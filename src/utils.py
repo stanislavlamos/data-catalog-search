@@ -160,6 +160,54 @@ def split_titles_cs_sql_output(sql_output: list) -> list[dict]:
 
     return split_output
 
+def split_publishers_cs_sql_output(sql_output: list) -> list[dict]:
+    split_output = []
+
+    for dataset_uri,title_cs,title_en,description_cs,description_en,keywords_cs,keywords_en,themes,has_rdf_distribution,publisher_en,publisher_cs,matched_substring in sql_output:
+        if publisher_cs is not None and len(publisher_cs) != 0:
+            split_output.append(
+                {
+                    "dataset_uri": dataset_uri,
+                    "title_cs": title_cs,
+                    "title_en": title_en,
+                    "description_cs": description_cs,
+                    "description_en": description_en,
+                    "keywords_cs": keywords_cs,
+                    "keywords_en": keywords_en,
+                    "themes": themes,
+                    "has_rdf_distribution": has_rdf_distribution,
+                    "publisher_en": publisher_en,
+                    "publisher_cs": publisher_cs,
+                    "matched_substring": matched_substring
+                }
+            )
+
+    return split_output
+
+def split_publishers_en_sql_output(sql_output: list) -> list[dict]:
+    split_output = []
+
+    for dataset_uri,title_cs,title_en,description_cs,description_en,keywords_cs,keywords_en,themes,has_rdf_distribution,publisher_en,publisher_cs,matched_substring in sql_output:
+        if publisher_en is not None and len(publisher_en) != 0:
+            split_output.append(
+                {
+                    "dataset_uri": dataset_uri,
+                    "title_cs": title_cs,
+                    "title_en": title_en,
+                    "description_cs": description_cs,
+                    "description_en": description_en,
+                    "keywords_cs": keywords_cs,
+                    "keywords_en": keywords_en,
+                    "themes": themes,
+                    "has_rdf_distribution": has_rdf_distribution,
+                    "publisher_en": publisher_en,
+                    "publisher_cs": publisher_cs,
+                    "matched_substring": matched_substring
+                }
+            )
+
+    return split_output
+
 def split_titles_en_sql_output(sql_output: list) -> list[dict]:
     split_output = []
 
@@ -279,6 +327,34 @@ def prepare_nkod_descs_for_chromadb(sql_output: list[dict], properties_key: str)
     return texts, ids, metadatas
 
 def prepare_nkod_titles_for_chromadb(sql_output: list[dict], properties_key: str) -> tuple[list[str], list[str], list[dict]]:
+    texts = []
+    metadatas = []
+    ids = []
+
+    for idx, item in enumerate(sql_output):
+        metadata = {
+            "dataset_uri": item.get("dataset_uri", "None") if item.get("dataset_uri", "None") is not None else "None",
+            "title_cs": item.get("title_cs", "None") if item.get("title_cs", "None")  is not None else "None",
+            "title_en": item.get("title_en", "None") if item.get("title_en", "None") is not None else "None",
+            "description_cs": item.get("description_cs", "None") if item.get("description_cs", "None") is not None else "None",
+            "description_en": item.get("description_en", "None") if item.get("description_en", "None") is not None else "None",
+            "keywords_cs": item.get("keywords_cs", "None") if item.get("keywords_cs", "None") is not None else "None",
+            "keywords_en": item.get("keywords_en", "None") if item.get("keywords_en", "None") is not None else "None",
+            "themes": item.get("themes", "None") if item.get("themes", "None") is not None else "None",
+            "has_rdf_distribution": item.get("has_rdf_distribution", "None") if item.get("has_rdf_distribution", "None") is not None else "None",
+            "publisher_en": item.get("publisher_en", "None") if item.get("publisher_en", "None") is not None else "None",
+            "publisher_cs": item.get("publisher_cs", "None") if item.get("publisher_cs", "None") is not None else "None",
+            "matched_substring": item.get("matched_substring", "None") if item.get("matched_substring", "None") is not None else "None"
+        }
+        text = strip_text(to_lower(item[properties_key]))
+        cur_id = f"id_item_{idx}"
+        texts.append(text)
+        metadatas.append(metadata)
+        ids.append(cur_id)
+
+    return texts, ids, metadatas
+
+def prepare_nkod_publishers_for_chromadb(sql_output: list[dict], properties_key: str) -> tuple[list[str], list[str], list[dict]]:
     texts = []
     metadatas = []
     ids = []
@@ -572,3 +648,54 @@ def sparql_json_to_df(inp_dict: dict) -> pd.DataFrame:
 
     df = pd.DataFrame(rows)
     return df
+
+def count_bindings(data: dict) -> int:
+    return len(data.get("results", {}).get("bindings", []))
+
+def count_unique_per_var(data: dict) -> dict:
+    bindings = data.get("results", {}).get("bindings", [])
+    vars_ = data.get("head", {}).get("vars", [])
+
+    result_sets = {var: set() for var in vars_}
+
+    for binding in bindings:
+        for var in vars_:
+            if var in binding and "value" in binding[var]:
+                result_sets[var].add(binding[var]["value"])
+
+    return {var: len(values) for var, values in result_sets.items()}
+
+def count_sparql_constructs(query: str) -> dict:
+    q = query.upper()
+
+    counts = {
+        "PREFIX": len(re.findall(r"\bPREFIX\b", q)),
+        "UNION": len(re.findall(r"\bUNION\b", q)),
+        "OPTIONAL": len(re.findall(r"\bOPTIONAL\b", q)),
+        "FILTER": len(re.findall(r"\bFILTER\b", q)),
+    }
+
+    return counts
+
+def get_sparql_stats(sparql_query: str, res: dict | list):
+    if isinstance(res, list):
+        print("Malformed query, please reformat your query.")
+    else:
+        print(f"Bindings len: {count_bindings(res)}")
+        print(f"Bindings per var: {count_unique_per_var(res)}")
+        print(f"SPARQL constructs: {count_sparql_constructs(sparql_query)}")
+        print(f"SPARQL len: {len(sparql_query)}")
+
+def match_uris(uris: list[str], dicts: list[dict], uri_key="dataset_uri") -> dict:
+    results = {}
+    for uri in uris:
+        found = False
+        for idx, d in enumerate(dicts):
+            if d.get(uri_key) == uri:
+                results[uri] = (True, idx)
+                found = True
+                break
+        if not found:
+            results[uri] = (False, None)
+            
+    return results

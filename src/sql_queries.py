@@ -22,6 +22,14 @@ get_titles_czech_nkod = """
     SELECT dataset_uri,title_cs,title_en,description_cs,description_en,keywords_cs,keywords_en,themes,has_rdf_distribution,publisher_en,publisher_cs,matched_substring FROM {table_name}
 """
 
+get_publishers_czech_nkod = """
+    SELECT dataset_uri,title_cs,title_en,description_cs,description_en,keywords_cs,keywords_en,themes,has_rdf_distribution,publisher_en,publisher_cs,matched_substring FROM {table_name}
+"""
+
+get_publishers_english_nkod = """
+    SELECT dataset_uri,title_cs,title_en,description_cs,description_en,keywords_cs,keywords_en,themes,has_rdf_distribution,publisher_en,publisher_cs,matched_substring FROM {table_name}
+"""
+
 get_titles_and_descs_czech_nkod = """
     SELECT dataset_uri, title_cs, description_cs, has_rdf_distribution FROM {table_name}
 """

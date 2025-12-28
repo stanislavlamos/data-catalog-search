@@ -49,11 +49,13 @@ class NkodQueryMatcherPipeline:
         entities = self.entity_generator.generate_entities(self.query)
         tasks = [
             ("matching_titles", self.nkod_query_matcher.get_matching_titles, (self.k, self.chroma_db, self.nkod_data_processor, self.language, self.embedding_provider, True)),
+            ("matching_publishers", self.nkod_query_matcher.get_matching_publishers, (self.k, self.chroma_db, self.nkod_data_processor, self.language, self.embedding_provider, True)), 
             ("matching_descs", self.nkod_query_matcher.get_matching_descriptions, (self.k, self.chroma_db, self.nkod_data_processor, self.language, self.embedding_provider, True)),
             ("matching_keywords", self.nkod_query_matcher.get_matching_keywords, (self.k, self.chroma_db, self.nkod_data_processor, self.language, self.embedding_provider, True)),
             ("entity_titles", self.nkod_query_matcher.get_matching_entitities_titles, (self.k, self.chroma_db, self.nkod_data_processor, self.language, self.embedding_provider, entities, True)),
             ("entity_keywords", self.nkod_query_matcher.get_matching_entitities_keywords, (self.k, self.chroma_db, self.nkod_data_processor, self.language, self.embedding_provider, entities, True)),
-            ("entity_descriptions", self.nkod_query_matcher.get_matching_entitities_descriptions, (self.k, self.chroma_db, self.nkod_data_processor, self.language, self.embedding_provider, entities, True))
+            ("entity_descriptions", self.nkod_query_matcher.get_matching_entitities_descriptions, (self.k, self.chroma_db, self.nkod_data_processor, self.language, self.embedding_provider, entities, True)),
+            ("entity_publishers", self.nkod_query_matcher.get_matching_entitities_publishers, (self.k, self.chroma_db, self.nkod_data_processor, self.language, self.embedding_provider, entities, True))
         ]
         num_workers = len(tasks)
         res = {}
@@ -65,7 +67,7 @@ class NkodQueryMatcherPipeline:
                 result = future.result()
                 res[name] = result
         
-        out_dfs = [res["matching_titles"], res["matching_descs"], res["matching_keywords"], res["entity_titles"], res["entity_keywords"], res["entity_descriptions"]]
+        out_dfs = [res["matching_titles"], res["matching_descs"], res["matching_keywords"], res["matching_publishers"], res["entity_titles"], res["entity_publishers"], res["entity_keywords"], res["entity_descriptions"]]
         df = pd.concat(out_dfs, ignore_index=True)
         res_df = df.loc[df.groupby("dataset_uri")["score"].idxmin()]
         res_df = res_df.sort_values("score", ascending=True)

@@ -23,7 +23,7 @@ class NkodOpenAiFilesPipeline:
     def run(self) -> NkodOpenAiFilesResponse:
         nkod_openai_files = NkodOpenAiFiles()
         vs_id = self.get_vector_store_id()
-        sparql_query, new_vs_id = nkod_openai_files.generate_sparql_query(self.query, self.matched_lst_dict, self.llm_provider, self.model_name, self.nkod_data_processor, self.language, self.sq_lite, self.graph_db, vs_id)
+        sparql_query, vs_id = nkod_openai_files.generate_sparql_query(self.query, self.matched_lst_dict, self.llm_provider, self.model_name, self.nkod_data_processor, self.language, self.sq_lite, self.graph_db, vs_id)
         sparql_query = delete_sparql_backticks(sparql_query)
         uris = [dir_name_from_uri(distribution["dataset_uri"]) for distribution in self.matched_lst_dict]
 
@@ -33,15 +33,15 @@ class NkodOpenAiFilesPipeline:
             if error is None:
                 return NkodOpenAiFilesResponse(sparql_query=sparql_query, query_result=query_result, is_executable=True)
             else:
-                return self.error_loop(error, sparql_query, new_vs_id)
+                return self.error_loop(error, sparql_query, vs_id)
 
         except Exception as e:
-            return self.error_loop(str(e), sparql_query, new_vs_id)
+            return self.error_loop(str(e), sparql_query, vs_id)
 
-    def error_loop(self, error: str, failing_query: str, new_vs_id: str) -> NkodOpenAiFilesResponse:
+    def error_loop(self, error: str, failing_query: str, new_vs_id: list[str]) -> NkodOpenAiFilesResponse:
         nkod_openai_files = NkodOpenAiFiles()
         for i in range(self.nkod_data_processor.NKOD_ERROR_LOOP_RETRIES):
-            sparql_query, _ = nkod_openai_files.generate_sparql_query_error(self.query, self.matched_lst_dict, self.llm_provider,
+            sparql_query, new_vs_id = nkod_openai_files.generate_sparql_query_error(self.query, self.matched_lst_dict, self.llm_provider,
                                                                 self.model_name, self.nkod_data_processor,
                                                                 self.language,
                                                                 self.sq_lite, self.graph_db, error, failing_query, new_vs_id)
@@ -62,13 +62,15 @@ class NkodOpenAiFilesPipeline:
         return NkodOpenAiFilesResponse(sparql_query=failing_query, query_result=["ERROR, please reformat your query"],
                                is_executable=False)
 
-    def parse_query_result(self):
-        pass
-
-    def get_vector_store_id(self) -> str | None:
-        if self.matched_lst_dict is None or len(self.matched_lst_dict) > 1:
+    def get_vector_store_id(self) -> list[str] | None:
+        if self.matched_lst_dict is None or len(self.matched_lst_dict) > 2:
             return None
-
+        
+        vs_ids = []
         with open(self.nkod_data_processor.vector_stores_json, "r") as f:
-            return json.load(f)[dir_name_from_uri(self.matched_lst_dict[0]["dataset_uri"])]
+            f_dict = json.load(f)
+            for matched_dataset in self.matched_lst_dict:
+                vs_ids.append(f_dict[dir_name_from_uri(matched_dataset["dataset_uri"])])
+        
+        return vs_ids
     

@@ -1,4 +1,5 @@
 import traceback
+import httpx
 import requests
 from SPARQLWrapper import SPARQLWrapper, JSON
 from dotenv import load_dotenv
@@ -13,6 +14,9 @@ class GraphDb:
     GRAPHDB_URL_LOCAL = "http://localhost:7200/repositories"
     GRAPHDB_NAMED_GRAPH_TEMPLATE = "http%3A%2F%2Fexample.org%2F{}"
     GRAPHDB_NAMED_GRAPH_TEMPLATE_FROM = "<http://example.org/{}>"
+    CONNECTION_TIMEOUT = 40
+    READ_TIMEOUT = 40
+    OVERALL_TIMEOUT = 40
 
     def __init__(self, catalog_name: str):
         self.repo_name = f"{catalog_name}_repo"
@@ -95,21 +99,43 @@ class GraphDb:
             "Accept": "application/sparql-results+json",
             "Content-Type": "application/sparql-query",
         }
-    
+
+        timeout = httpx.Timeout(self.OVERALL_TIMEOUT)
         try:
             if self.GRAPHDB_USERNAME is not None and self.GRAPHDB_PASSWORD is not None:
+                """
                 response = requests.post(
                     api_url,
                     data=query,   
                     headers=headers,
+                    auth=(self.GRAPHDB_USERNAME, self.GRAPHDB_PASSWORD),
+                    timeout=(self.CONNECTION_TIMEOUT, self.READ_TIMEOUT)
+                )
+                """
+                with httpx.Client(timeout=timeout) as client:
+                    response = client.post(
+                    api_url,
+                    content=query,
+                    headers=headers,
                     auth=(self.GRAPHDB_USERNAME, self.GRAPHDB_PASSWORD)
                 )
+            
+            else:
+                with httpx.Client(timeout=timeout) as client:
+                    response = client.post(
+                    api_url,
+                    content=query,
+                    headers=headers,
+                )
+            """
             else:
                 response = requests.post(
                     api_url,
                     data=query,   
                     headers=headers,
+                    timeout=(self.CONNECTION_TIMEOUT, self.READ_TIMEOUT)
                 )
+            """
 
             #print(f"response from graphdb: {response}")
 

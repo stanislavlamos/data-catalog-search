@@ -18,9 +18,9 @@ from src.services.base_data_processor import BaseDataProcessor
 from ..sql_queries import get_keywords_czech_nkod, get_keywords_english_nkod, get_descriptions_czech_nkod, \
     get_descriptions_english_nkod, get_titles_english_nkod, get_titles_czech_nkod, get_themes_labels_english_nkod, \
     get_themes_labels_czech_nkod, get_themes_definitions_czech_nkod, get_themes_definitions_english_nkod, \
-    get_titles_from_uri_czech_nkod, get_titles_from_uri_english_nkod
-from ..utils import split_descs_cs_sql_output, split_descs_en_sql_output, split_keywords_cs_sql_output, split_keywords_en_sql_output, print_keywords_stats, \
-    print_titles_stats, print_descs_stats, prepare_nkod_keywords_for_chromadb, batch_list, \
+    get_titles_from_uri_czech_nkod, get_titles_from_uri_english_nkod, get_publishers_czech_nkod, get_publishers_english_nkod
+from ..utils import prepare_nkod_publishers_for_chromadb, split_descs_cs_sql_output, split_descs_en_sql_output, split_keywords_cs_sql_output, split_keywords_en_sql_output, print_keywords_stats, \
+    print_titles_stats, print_descs_stats, prepare_nkod_keywords_for_chromadb, batch_list, split_publishers_cs_sql_output, split_publishers_en_sql_output, \
     split_themes_sql_output, prepare_nkod_themes_properties_for_chromadb, split_titles_cs_sql_output, split_titles_en_sql_output, \
     prepare_nkod_descs_for_chromadb, prepare_nkod_titles_for_chromadb, intersect_dataframes
 
@@ -110,6 +110,7 @@ class NkodDataProcessor(BaseDataProcessor):
         self.titles_collection_name = "nkod_titles"
         self.themes_labels_collection_name = "nkod_themes_labels"
         self.themes_definitions_collection_name = "nkod_themes_definitions"
+        self.publishers_collection_name = "nkod_publishers"
 
     def download_catalog_metadata(self) -> None:
         response = requests.get(self.METADATA_URL)
@@ -197,6 +198,26 @@ class NkodDataProcessor(BaseDataProcessor):
 
         if verbose:
             print_titles_stats(split_sql, f"title_{language}", language)
+    
+    def _index_publishers(self, sq_lite: SqLite, embedding_provider: BaseEmbeddingProvider, chroma_db: ChromaDb, language: str = "cs", verbose: bool = False) -> None:
+        if language == "cs":
+            result = sq_lite.query_data(get_publishers_czech_nkod, {"table_name": self.ofn_dataset_sql_table_name})
+        else:  # language == "en"
+            result = sq_lite.query_data(get_publishers_english_nkod, {"table_name": self.ofn_dataset_sql_table_name})
+
+        split_sql = split_publishers_cs_sql_output(result) if language == "cs" else split_publishers_en_sql_output(result)
+        texts, ids, metadatas = prepare_nkod_publishers_for_chromadb(split_sql, f"publisher_{language}")
+        num_batches = math.ceil(len(texts) / self.BATCH_SIZE)
+        batched_texts = batch_list(texts, self.BATCH_SIZE)
+        batched_ids = batch_list(ids, self.BATCH_SIZE)
+        batched_metadatas = batch_list(metadatas, self.BATCH_SIZE)
+
+        chroma_db.flush_cache()
+        chroma_db.create_collection(f"{self.publishers_collection_name}_{language}", embedding_provider)
+        chroma_db.add_documents_batched(batched_texts, batched_ids, batched_metadatas, f"publisher_{language}", num_batches)
+
+        if verbose:
+            print_titles_stats(split_sql, f"publisher_{language}", language)
 
     def index_catalog_metadata(self, sq_lite: SqLite, embedding_provider: BaseEmbeddingProvider, chroma_db: ChromaDb, verbose: bool = False) -> None:
         self._index_keywords(sq_lite, embedding_provider, chroma_db ,verbose=verbose)
@@ -205,6 +226,8 @@ class NkodDataProcessor(BaseDataProcessor):
         self._index_descriptions(sq_lite, embedding_provider, chroma_db, language="en", verbose=verbose)
         self._index_titles(sq_lite, embedding_provider, chroma_db, verbose=verbose)
         self._index_titles(sq_lite, embedding_provider, chroma_db, language="en", verbose=verbose)
+        self._index_publishers(sq_lite, embedding_provider, chroma_db, verbose=verbose)
+        self._index_publishers(sq_lite, embedding_provider, chroma_db, language="en", verbose=verbose)
 
     def _index_themes_labels(self, sq_lite: SqLite, embedding_provider: BaseEmbeddingProvider, chroma_db: ChromaDb, language: str = "cs"):
         if language == "cs":

@@ -10,7 +10,7 @@ from src.schemas.nkod_openai_files_request import NkodOpenAiFilesRequest
 from src.schemas.nkod_rag_request import NkodRagRequest
 from src.schemas.nkod_shacl_request import NkodShaclRequest
 from src.services.nkod_data_processor import NkodDataProcessor
-from src.utils import load_jsonl_to_list
+from src.utils import load_jsonl_to_list, get_sparql_stats
 
 
 class NkodSparqlGenerationEvaluator:
@@ -36,7 +36,7 @@ class NkodSparqlGenerationEvaluator:
             print(f"Desc: {ofn_sample['desc']}")
 
             dataset_uris = ofn_sample['dataset_uris']
-            language = ofn_sample['language']
+            language = "cs"
             matched_lst_dict = [df[df["dataset_uri"] == dataset_uri].to_dict('records')[0] for dataset_uri in dataset_uris]
 
             request = NkodShaclRequest(
@@ -49,6 +49,8 @@ class NkodSparqlGenerationEvaluator:
 
             print(f"SPARQL query from NKOD SHACL Pipeline:\n{response.sparql_query}")
             print(f"SPARQL result: \n{response.query_result}")
+            print("STATS" + "-" * 80)
+            get_sparql_stats(response.sparql_query, response.query_result)
             print("-" * 80)
             print("\n")
     
@@ -65,7 +67,7 @@ class NkodSparqlGenerationEvaluator:
             print(f"Desc: {ofn_sample['desc']}")
 
             dataset_uris = ofn_sample['dataset_uris']
-            language = ofn_sample['language']
+            language = "cs"
             matched_lst_dict = [df[df["dataset_uri"] == dataset_uri].to_dict('records')[0] for dataset_uri in dataset_uris]
 
             request = NkodRagRequest(
@@ -78,6 +80,8 @@ class NkodSparqlGenerationEvaluator:
 
             print(f"SPARQL query from NKOD RAG PIPELINE:\n{response.sparql_query}")
             print(f"SPARQL result: \n{response.query_result}")
+            print("STATS" + "-" * 80)
+            get_sparql_stats(response.sparql_query, response.query_result)
             print("-" * 80)
             print("\n")
 
@@ -94,7 +98,7 @@ class NkodSparqlGenerationEvaluator:
             print(f"Desc: {ofn_sample['desc']}")
 
             dataset_uris = ofn_sample['dataset_uris']
-            language = ofn_sample['language']
+            language = "cs"
             matched_lst_dict = [df[df["dataset_uri"] == dataset_uri].to_dict('records')[0] for dataset_uri in dataset_uris]
 
             request = NkodGraphSparqlRequest(
@@ -107,6 +111,8 @@ class NkodSparqlGenerationEvaluator:
 
             print(f"SPARQL query from NKOD GRAPH SPARQL PIPELINE:\n{response.sparql_query}")
             print(f"SPARQL result: \n{response.query_result}")
+            print("STATS" + "-" * 80)
+            get_sparql_stats(response.sparql_query, response.query_result)
             print("-" * 80)
             print("\n")
     
@@ -123,7 +129,7 @@ class NkodSparqlGenerationEvaluator:
             print(f"Desc: {ofn_sample['desc']}")
 
             dataset_uris = ofn_sample['dataset_uris']
-            language = ofn_sample['language']
+            language = "cs"
             matched_lst_dict = [df[df["dataset_uri"] == dataset_uri].to_dict('records')[0] for dataset_uri in dataset_uris]
 
             request = NkodOpenAiFilesRequest(
@@ -136,5 +142,7 @@ class NkodSparqlGenerationEvaluator:
 
             print(f"SPARQL query from NKOD OPENAI FILES PIPELINE:\n{response.sparql_query}")
             print(f"SPARQL result: \n{response.query_result}")
+            print("STATS" + "-" * 80)
+            get_sparql_stats(response.sparql_query, response.query_result)
             print("-" * 80)
             print("\n")

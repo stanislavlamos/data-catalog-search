@@ -45,7 +45,7 @@ class NkodOpenAiFiles:
             "xml": "xml"
         }
 
-    def generate_sparql_query(self, user_query: str, matched_lst_dict: list[dict], llm_provider: BaseLLMProvider, model_name: str, nkod_data_processor: NkodDataProcessor, language: str, sq_lite: SqLite, graph_db: GraphDb, vs_id: str | None) -> tuple[str, str]:
+    def generate_sparql_query(self, user_query: str, matched_lst_dict: list[dict], llm_provider: BaseLLMProvider, model_name: str, nkod_data_processor: NkodDataProcessor, language: str, sq_lite: SqLite, graph_db: GraphDb, vs_id: list[str] | None) -> tuple[str, list[str]]:
         titles_str = format_publishers_or_titles([distribution["title_cs"] for distribution in matched_lst_dict])
         publishers_str = format_publishers_or_titles([distribution["publisher_cs"] for distribution in matched_lst_dict])
         files_ids = self.upload_files(matched_lst_dict, nkod_data_processor) if vs_id is None else None
@@ -66,7 +66,7 @@ class NkodOpenAiFiles:
         
         return sparql_query, new_vs_id
 
-    def generate_sparql_query_error(self, user_query: str, matched_lst_dict: list[dict], llm_provider: BaseLLMProvider, model_name: str, nkod_data_processor: NkodDataProcessor, language: str, sq_lite: SqLite, graph_db: GraphDb, error: str, failing_query: str, vs_id: str | None) -> tuple[str, str]:
+    def generate_sparql_query_error(self, user_query: str, matched_lst_dict: list[dict], llm_provider: BaseLLMProvider, model_name: str, nkod_data_processor: NkodDataProcessor, language: str, sq_lite: SqLite, graph_db: GraphDb, error: str, failing_query: str, vs_id: list[str] | None) -> tuple[str, list[str]]:
         titles_str = format_publishers_or_titles([distribution["title_cs"] for distribution in matched_lst_dict])
         publishers_str = format_publishers_or_titles([distribution["publisher_cs"] for distribution in matched_lst_dict])
         files_ids = self.upload_files(matched_lst_dict, nkod_data_processor) if vs_id is None else None
