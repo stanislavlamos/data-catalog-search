@@ -47,11 +47,11 @@ class OpenAILLMProvider(BaseLLMProvider):
         response = llm.invoke(messages)
 
         end = time.time()
-        input_tokens = response.usage_metadata["input_tokens"]
-        output_tokens = response.usage_metadata["output_tokens"]
-        total_tokens = response.usage_metadata["total_tokens"]
+        #input_tokens = response.usage_metadata["input_tokens"]
+        #output_tokens = response.usage_metadata["output_tokens"]
+        #total_tokens = response.usage_metadata["total_tokens"]
         print(f"Elapsed time: {end - start:.4f} seconds, model: {self.model_name}|effort: {effort}, purpose: {purpose}")
-        print(f"Input tokens: {input_tokens}, Output_tokens: {output_tokens}, Total tokens: {total_tokens}")
+        #print(f"Input tokens: {input_tokens}, Output_tokens: {output_tokens}, Total tokens: {total_tokens}")
         return response
     
     def chat_vector_store(self, user_prompt: str, system_prompt: str, file_ids: list[str], purpose: str | None = None) -> tuple[str, list[str]]:
@@ -88,12 +88,12 @@ class OpenAILLMProvider(BaseLLMProvider):
 
             
         end = time.time()
-        usage = response.usage
-        input_tokens = usage.input_tokens
-        output_tokens = usage.output_tokens
-        total_tokens = usage.total_tokens
+        #usage = response.usage
+        #input_tokens = usage.input_tokens
+        #output_tokens = usage.output_tokens
+        #total_tokens = usage.total_tokens
         print(f"Elapsed time: {end - start:.4f} seconds, model: {self.model_name}|effort: low, purpose: {purpose}")
-        print(f"Input tokens: {input_tokens}, Output_tokens: {output_tokens}, Total tokens: {total_tokens}")
+        #print(f"Input tokens: {input_tokens}, Output_tokens: {output_tokens}, Total tokens: {total_tokens}")
         
         return response.output_text, [vector_store.id]
 
@@ -122,12 +122,12 @@ class OpenAILLMProvider(BaseLLMProvider):
                 print(f"OpenAI request failed ({type(e).__name__})")
 
         end = time.time()
-        usage = response.usage
-        input_tokens = usage.input_tokens
-        output_tokens = usage.output_tokens
-        total_tokens = usage.total_tokens
+        #usage = response.usage
+        #input_tokens = usage.input_tokens
+        #output_tokens = usage.output_tokens
+        #total_tokens = usage.total_tokens
         print(f"Elapsed time: {end - start:.4f} seconds, model: {self.model_name}|effort: low, purpose: {purpose}")
-        print(f"Input tokens: {input_tokens}, Output_tokens: {output_tokens}, Total tokens: {total_tokens}")
+        #print(f"Input tokens: {input_tokens}, Output_tokens: {output_tokens}, Total tokens: {total_tokens}")
         
         return response.output_text, vector_store_id
 
