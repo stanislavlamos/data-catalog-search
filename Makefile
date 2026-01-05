@@ -31,6 +31,18 @@ setup_build:
 	make install
 	make index_build
 
+setup_build_kos:
+	mkdir -p ./data/nkod/tmp
+	find ./data/nkod -type d -name "*-*" -exec rm -r {} +
+	rm -f ./data/nkod/chroma.sqlite3
+	rm -f ./data/nkod/chroma.sqlite3-journal
+	rm -f ./data/nkod/nkod_metadata.db
+	rm -f ./data/nkod/nkod_themes.db
+	make download_build_gdrive
+	make unzip_build
+	make install
+	make index_build
+
 prepare_deploy:
 	mkdir -p ./data/nkod/tmp
 	find ./data/nkod -type d -name "*-*" -exec rm -r {} +
@@ -69,3 +81,6 @@ create_vector_stores:
 
 unzip_build:
 	cd data/nkod/ && unzip ofn_build.zip
+
+download_build_gdrive:
+	gdown 19bN7jbin-bxJKS0gA8Jd1rClVw8OktDA -O ./data/nkod/ofn_build2.zip
