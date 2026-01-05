@@ -83,4 +83,4 @@ unzip_build:
 	cd data/nkod/ && unzip ofn_build.zip
 
 download_build_gdrive:
-	gdown 19bN7jbin-bxJKS0gA8Jd1rClVw8OktDA -O ./data/nkod/ofn_build2.zip
+	gdown 19bN7jbin-bxJKS0gA8Jd1rClVw8OktDA -O ./data/nkod/ofn_build.zip
