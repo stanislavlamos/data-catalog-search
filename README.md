@@ -1,16 +1,17 @@
 # Data Catalog Search
-
+You can try our **deployed application** here:
+https://data-catalog-search.onrender.com
 
 ## Run project locally
 1. Create `.env` file in the project root directory and add your API keys:
 ```env
 OPENAI_API_KEY=
-API_BASE_URL= http://127.0.0.1:8000
-GRAPH_DB_REPO=http://osw.felk.cvut.cz:7200/repositories/lamossta
-GRAPH_DB_REPO_UPDATE=http://osw.felk.cvut.cz:7200/repositories/lamossta/statements
-GRAPH_DB_USER=lamossta
-GRAPH_DB_PASSWORD="S$i#9KoYNxA!cQ"
-DATA_VIEWER_URL=https://data-catalog-viewer-ysmlxmu5hmhaet3xa5nkyz.streamlit.app/
+API_BASE_URL=http://127.0.0.1:8000
+GRAPH_DB_REPO=
+GRAPH_DB_REPO_UPDATE=
+GRAPH_DB_USER=
+GRAPH_DB_PASSWORD=
+DATA_VIEWER_URL=
 CO_API_KEY=
 GOOGLE_API_KEY=
 ```
@@ -38,4 +39,7 @@ http://localhost:8501
 ## Demo notebooks
 Useful demo Jupyter notebooks included in this repository:
 
-- [experiments_sparql_generation.ipynb](experiments_sparql_generation.ipynb) — Embeddings generation and vector index building
+- [experiments_sparql_generation.ipynb](experiments_sparql_generation.ipynb) — Generation of SPARQL queries
+- [experiments_query_matching.ipynb](experiments_query_matching.ipynb) — Matching of datasets
+- [data_analysis.ipynb](data_analysis.ipynb) — Data analysis of our OFN dataset
+
