@@ -1,6 +1,6 @@
 # Data Catalog Search
-You can try our **deployed application** here:
-https://data-catalog-search.onrender.com
+Code for the master thesis titled as **Using LLMs for search in data catalogs**. The thesis can be found here:   
+ https://dspace.cvut.cz/entities/publication/45eb332f-7f2d-42e4-8200-efabd612897a
 
 ## Run project locally
 1. Create `.env` file in the project root directory and add your API keys:
